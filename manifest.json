@@ -1,13 +1,13 @@
 {
-  "manifest_version": 1,
+  "manifest_version": 2,
 
-  "name": "RRE For Chrome",
+  "name": "RRE For Google Chrome",
   "version": "1.0",
-  "description": "RRE Chrome Extensions",
+  "description": "RRE Chrome Extension",
 
   "content_scripts": [{
-    "css": ["style.css"],
-    "js": ["main.js"],
+    "css": ["styles.css"],
+    "js": ["content.js"],
     "matches": ["https://www.reddit.com/*"]
   }]
 
