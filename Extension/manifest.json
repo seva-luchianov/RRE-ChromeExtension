@@ -10,20 +10,15 @@
         "default_title": "Reddit Recommendation Engine"
     },
 
-    "background": {
-        "scripts": ["background.js"],
-        "persistent": false
-    },
-
     "icons": {
         "16": "img/rre-icon-16.png",
         "48": "img/rre-icon-48.png",
         "128": "img/rre-icon-128.png"
     },
+
     "content_scripts": [{
         "css": ["styles.css"],
         "js": ["main.js"],
-        "js": ["recommendation.js"],
         "matches": ["https://www.reddit.com/*"]
     }]
 
