@@ -1,13 +1,31 @@
 {
     "manifest_version": 2,
 
-    "name": "RRE For Google Chrome",
+    "name": "RRE Chrome Extension",
     "version": "1.0",
-    "description": "RRE Chrome Extension",
+    "description": "Reddit Recommendation Engine For Google Chrome",
+    "permissions": ["storage", "activeTab"],
+
+    "browser_action": {
+    	"default_title": "Reddit Recommendation Engine"
+    },
+
+    "background": {
+    	"scripts": ["background.js"],
+    	"persistent": false
+    },
+
+    "icons": {
+    	"16": "img/rre-icon-16.png",
+    	"48": "img/rre-icon-48.png",
+    	"128": "img/rre-icon-128.png"
+    },
 
     "content_scripts": [{
-        "css": ["styles.css"],
+    	"css": ["styles.css"],
         "js": ["main.js"],
+        "js": ["recommendation.js"],
         "matches": ["https://www.reddit.com/*"]
     }]
+
 }

@@ -1,3 +1,13 @@
 /*body {
   background: #fff !important;
 }*/
+
+.recBlock {
+	color: red !important;
+	background-color: green !important;
+}
+
+.recTitle {
+	color: yellow !important;
+	background-color: blue !important;
+}
