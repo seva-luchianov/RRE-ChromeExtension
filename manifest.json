@@ -1,0 +1,14 @@
+{
+  "manifest_version": 1,
+
+  "name": "RRE For Chrome",
+  "version": "1.0",
+  "description": "RRE Chrome Extensions",
+
+  "content_scripts": [{
+    "css": ["style.css"],
+    "js": ["main.js"],
+    "matches": ["https://www.reddit.com/*"]
+  }]
+
+}
