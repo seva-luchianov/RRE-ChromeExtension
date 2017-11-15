@@ -4,6 +4,7 @@
     "name": "RRE For Google Chrome",
     "version": "1.0",
     "description": "RRE Chrome Extension",
+    "permissions": ["<all_urls>"],
 
     "content_scripts": [{
         "css": ["styles.css"],

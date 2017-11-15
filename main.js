@@ -1,23 +1,33 @@
 var xhr = new XMLHttpRequest();
-xhr.open('GET', 'localhost:8080/api/subreddits/recommended', true);
+xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
 xhr.onload = function() {
-    var
+    var newDiv = document.createElement("div");
     if (this.status === 200) {
-        console.log(this)
-            // do something
+        console.log(this);
+        var newContent = document.createTextNode("Hi there and greetings!");
+        newDiv.appendChild(newContent);
     } else {
-
+        var newContent = document.createTextNode("Hi there and greetings!");
+        newDiv.appendChild(newContent);
     }
 
-    // Inject
-    var newDiv = document.createElement("div");
-    var newContent = document.createTextNode("Hi there and greetings!");
-    newDiv.appendChild(newContent); //add the text node to the newly created div.
-
-    // add the newly created element and its content into the DOM
+    // Inject into reddit sidebar
     var sideBarDiv = document.getElementsByClassName("side")[0];
 
     console.log(sideBarDiv);
     sideBarDiv.insertBefore(newDiv, sideBarDiv.childNodes[1]);
 };
-xhr.send(null);
+
+xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+xhr.send(JSON.stringify({
+    tags: [
+        "stories",
+        "technology"
+    ],
+    subscribed: [],
+    blacklisted: [
+        "/r/news/"
+    ],
+    maxRecommendations: 10
+}));
