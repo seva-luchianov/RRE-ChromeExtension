@@ -4,10 +4,10 @@ xhr.onload = function() {
     var newDiv = document.createElement("div");
     if (this.status === 200) {
         console.log(this);
-        var newContent = document.createTextNode("Hi there and greetings!");
+        var newContent = createRecommendationDIV("Test");
         newDiv.appendChild(newContent);
     } else {
-        var newContent = document.createTextNode("Hi there and greetings!");
+        var newContent = document.createTextNode("No Recommendations :(");
         newDiv.appendChild(newContent);
     }
 
@@ -31,3 +31,7 @@ xhr.send(JSON.stringify({
     ],
     maxRecommendations: 10
 }));
+
+function createRecommendationDIV(name) {
+  return document.createTextNode(name);
+}
