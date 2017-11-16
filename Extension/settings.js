@@ -1,6 +1,6 @@
 function save_options() {
     var maxRecommendations = parseInt(document.getElementById('recommendationLimit').value);
-    var status = document.getElementById('status');
+    var status = document.getElementById('save-status');
     if (isNaN(maxRecommendations)) {
         status.textContent = 'Value must be integer';
     } else {
@@ -60,6 +60,20 @@ function restore_options() {
 }
 
 function createListEntry(parentID, name) {
+    var parentDIV = document.getElementById(parentID);
+    var i;
+    for (i = 0; i < parentDIV.childElementCount; i++) {
+        var existingName = parentDIV.children[i].children[0].innerHTML;
+        if (existingName === name) {
+            var status = document.getElementById(parentID + "-status");
+            status.textContent = 'Entry already exists';
+            setTimeout(function() {
+                status.textContent = '';
+            }, 1000);
+            return;
+        }
+    }
+
     var id = parentID + "-" + name;
     console.log("Entry: " + name);
 
@@ -81,8 +95,73 @@ function createListEntry(parentID, name) {
         deleteThis.parentNode.removeChild(deleteThis);
     });
     entry.appendChild(deleteButton);
-    document.getElementById(parentID).appendChild(entry);
+    parentDIV.appendChild(entry);
 }
 
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
+
+document.getElementById("tagsInput").addEventListener("keydown", function(event) {
+    if (event.keyCode === 13) {
+        var textbox = this;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://localhost:8080/api/tags/');
+        xhr.onload = function() {
+            if (this.status === 200) {
+                var response = JSON.parse(this.response);
+                var tagExists = false;
+                var i;
+                for (i in response) {
+                    tagExists = tagExists || (response[i].name === textbox.value);
+                }
+                if (tagExists) {
+                    createListEntry('tags', textbox.value);
+                    textbox.value = "";
+                } else {
+                    var status = document.getElementById('tags-status');
+                    status.textContent = 'Tag Not Found';
+                    setTimeout(function() {
+                        status.textContent = '';
+                    }, 1000);
+                }
+            } else {
+                // Fucking RIP
+            }
+        };
+        xhr.send();
+    }
+});
+
+document.getElementById("blacklistInput").addEventListener("keydown", function(event) {
+    if (event.keyCode === 13) {
+        var blacklist = "";
+        const regex = /[\w]+/g;
+        let m;
+
+        while ((m = regex.exec(this.value)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            // The result can be accessed through the `m`-variable.
+            m.forEach((match, groupIndex) => {
+                blacklist = match;
+                console.log(`Found match, group ${groupIndex}: ${match}`);
+            });
+        }
+        if (!blacklist) {
+            var status = document.getElementById('blacklist-status');
+            status.textContent = 'Input cannot be interpreted as subreddit';
+            setTimeout(function() {
+                status.textContent = '';
+            }, 1000);
+        } else {
+            blacklist = "/r/" + blacklist + "/";
+            console.log("final cleanup: " + blacklist);
+            createListEntry('blacklist', tag);
+            this.value = "";
+        }
+    }
+});

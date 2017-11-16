@@ -40,17 +40,19 @@ xhr.onload = function() {
 };
 
 xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-xhr.send(JSON.stringify({
-    tags: [
-        "stories",
-        "technology"
-    ],
-    subscribed: [],
-    blacklisted: [
-        "/r/news/"
-    ],
-    maxRecommendations: 10
-}));
+
+chrome.storage.sync.get([
+    'RRERecommendationLimit',
+    'RRETags',
+    'RREBlackList'
+], function(items) {
+    xhr.send(JSON.stringify({
+        tags: items.RRETags,
+        subscribed: [],
+        blacklisted: items.RREBlackList,
+        maxRecommendations: items.RRERecommendationLimit
+    }));
+});
 
 function createRecommendationDIV(subreddit) {
     var recommendationDIV = document.createElement("div");
