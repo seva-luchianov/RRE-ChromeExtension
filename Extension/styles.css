@@ -6,6 +6,19 @@ div.header {
   font-weight: bold;
 }
 
+.recommendation {
+  color: #0645AD;
+  cursor: pointer;
+  display: block;
+}
+
+.recommendation:hover {
+  color: #0645AD;
+  text-decoration: underline;
+  cursor: pointer;
+  display: block;
+}
+
 .deleteButton {
   -webkit-border-radius: 60;
   -moz-border-radius: 60;
