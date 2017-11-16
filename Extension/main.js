@@ -33,8 +33,8 @@ xhr.send(JSON.stringify({
 }));
 
 function createRecommendationDIV(subreddit) {
-  var recommendationDIV = document.createElement("div");
-  recommendationDIV.style.display = "block";
-  recommendationDIV.innerHTML = subreddit;
-  return recommendationDIV;
+    var recommendationDIV = document.createElement("div");
+    recommendationDIV.style.display = "block";
+    recommendationDIV.innerHTML = subreddit;
+    return recommendationDIV;
 }

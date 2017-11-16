@@ -10,6 +10,8 @@
         "default_title": "Reddit Recommendation Engine"
     },
 
+    "options_page": "settings.html",
+
     "icons": {
         "16": "img/rre-icon-16.png",
         "48": "img/rre-icon-48.png",
