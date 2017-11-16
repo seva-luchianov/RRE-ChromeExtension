@@ -1,14 +1,3 @@
-// First Time Setup
-chrome.runtime.onInstalled.addListener(function(details) {
-    if (details.reason == "install") {
-        console.log("First Time Setup Triggered");
-
-    } else if (details.reason == "update") {
-        var thisVersion = chrome.runtime.getManifest().version;
-        console.log("Updated from " + details.previousVersion + " to " + thisVersion + "!");
-    }
-});
-
 // Setup the container
 var RREContainer = document.createElement("div");
 var header = document.createElement("div");
@@ -63,14 +52,25 @@ function refreshRecommendations(deletedRecommendation) {
         'RRETags',
         'RREBlackList'
     ], function(items) {
-        xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.send(JSON.stringify({
-            tags: items.RRETags,
-            subscribed: [],
-            blacklisted: items.RREBlackList,
-            maxRecommendations: items.RRERecommendationLimit
-        }));
+        if (!items.RRETags || !items.RREBlackList || !items.RRERecommendationLimit) {
+            console.log("First Time Setup Triggered");
+            if (chrome.runtime.openOptionsPage) {
+                // New way to open options pages, if supported (Chrome 42+).
+                chrome.runtime.openOptionsPage();
+            } else {
+                // Reasonable fallback.
+                window.open(chrome.runtime.getURL('settings.html'));
+            }
+        } else {
+            xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({
+                tags: items.RRETags,
+                subscribed: [],
+                blacklisted: items.RREBlackList,
+                maxRecommendations: items.RRERecommendationLimit
+            }));
+        }
     });
 }
 
@@ -112,3 +112,16 @@ function createRecommendationDIV(subreddit) {
     entry.appendChild(deleteButton);
     parentDIV.appendChild(entry);
 }
+
+// First Time Setup
+/*chrome.runtime.onInstalled.addListener(function(details) {
+    if (details.reason == "install") {
+        console.log("First Time Setup Triggered");
+        chrome.runtime.openOptionsPage(function() {
+            refreshRecommendations();
+        });
+    } else if (details.reason == "update") {
+        var thisVersion = chrome.runtime.getManifest().version;
+        console.log("Updated from " + details.previousVersion + " to " + thisVersion + "!");
+    }
+});*/
