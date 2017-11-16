@@ -1,3 +1,23 @@
+// Setup the container
+var RREContainer = document.createElement("div");
+var header = document.createElement("div");
+header.appendChild(document.createTextNode("Recommendations:"));
+
+var settingsButton = document.createElement('button');
+//settingsButton.setAttribute('id', "go-to-options");
+settingsButton.innerHTML = "Settings";
+settingsButton.addEventListener('click', function() {
+    if (chrome.runtime.openOptionsPage) {
+        // New way to open options pages, if supported (Chrome 42+).
+        chrome.runtime.openOptionsPage();
+    } else {
+        // Reasonable fallback.
+        window.open(chrome.runtime.getURL('settings.html'));
+    }
+});
+header.appendChild(settingsButton);
+RREContainer.appendChild(header);
+
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
 xhr.onload = function() {
@@ -12,14 +32,14 @@ xhr.onload = function() {
     } else {
         recommendationsListDIV.appendChild(document.createTextNode("No Recommendations :("));
     }
+    RREContainer.appendChild(recommendationsListDIV);
 
     // Inject into reddit sidebar
     var sideBarDiv = document.getElementsByClassName("side")[0];
-    sideBarDiv.insertBefore(recommendationsListDIV, sideBarDiv.childNodes[1]);
+    sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 };
 
 xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-
 xhr.send(JSON.stringify({
     tags: [
         "stories",

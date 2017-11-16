@@ -2,12 +2,25 @@
   background: #fff !important;
 }*/
 
-.recBlock {
-	color: red !important;
-	background-color: green !important;
+div.header {
+  font-weight: bold;
 }
 
-.recTitle {
-	color: yellow !important;
-	background-color: blue !important;
+.deleteButton {
+  -webkit-border-radius: 60;
+  -moz-border-radius: 60;
+  border-radius: 60px;
+  text-shadow: 1px 1px 3px #ffdbdb;
+  font-family: Arial;
+  color: #000000;
+  font-size: 14px;
+  background: #ffffff;
+  padding: 5px 8px 5px 8px;
+  border: solid #000000 2px;
+  text-decoration: none;
+}
+
+.deleteButton:hover {
+  background: #ff0000;
+  text-decoration: none;
 }
