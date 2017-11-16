@@ -1,3 +1,14 @@
+// First Time Setup
+chrome.runtime.onInstalled.addListener(function(details) {
+    if (details.reason == "install") {
+        console.log("First Time Setup Triggered");
+
+    } else if (details.reason == "update") {
+        var thisVersion = chrome.runtime.getManifest().version;
+        console.log("Updated from " + details.previousVersion + " to " + thisVersion + "!");
+    }
+});
+
 // Setup the container
 var RREContainer = document.createElement("div");
 var header = document.createElement("div");
