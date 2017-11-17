@@ -9,12 +9,13 @@
         ]
     },
     "main": "extension/main.js",
-
+        "scripts": {
+        "test": "nyc mocha ./test"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/Crazychicken563/RRE-ChromeExtension"
     },
-
     "author": "Alex Feldman, Jonathan Ligh, Seva Luchianov",
     "license": "ISC",
     "dependencies": {

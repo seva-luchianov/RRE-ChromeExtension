@@ -6,24 +6,12 @@ const expect = chai.expect;
 
 describe('main.js tests', () => {
 
-    };
-
-    // Before Each Test
-    before(done => {
-    	done();
-    });
-
-    after(done => {
-        done();
-    })
-
     describe('These mains', () => {
         describe('This main', () => {
-        	it('This main does thing', (done) => {
+            it('This main does thing', () => {
 
 
-        		done();
-            }).catch(done);
-       	});
+            })
+        });
     });
 });

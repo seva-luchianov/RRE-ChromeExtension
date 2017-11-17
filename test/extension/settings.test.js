@@ -5,25 +5,13 @@ const assert = chai.assert;
 const expect = chai.expect;
 
 describe('settings tests', () => {
-    let subreddit;
-    const thing;
-
-    // Before Each Test
-    before(done => {
-    	done();
-    });
-
-    after(done => {
-    	done();
-    })
 
     describe('These settings', () => {
         describe('This setting', () => {
-        	it('This thing does this', (done) => {
+        	it('This thing does this', () => {
 
 
-        		done();
-            }).catch(done);
+            })
        	});
     });
 });
