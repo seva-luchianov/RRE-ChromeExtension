@@ -3,7 +3,7 @@ const spies = require('chai-spies');
 chai.use(spies);
 const assert = chai.assert;
 const expect = chai.expect;
-const main = rewire('../../extension/settings');
+const main = rewire('../../src/js/options');
 
 describe('settings tests', () => {
 
