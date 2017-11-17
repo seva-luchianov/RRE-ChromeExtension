@@ -10,10 +10,12 @@
         "build": "mkdir -p ./build/prod && webpack --config ./webpack/webpack.config.prod.js",
         "start": "mkdir -p ./build/dev && webpack --config ./webpack/webpack.config.dev.js",
         "lint": "eslint src/js/",
-        "test": "mocha-webpack --watch --webpack-config ./webpack/webpack.config.test.js \"src/js/**/*.spec.js\"",
-        "test:ci": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/js/**/*.spec.js\""
+        "test": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/**/*.spec.js\"",
+        "test:ci": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/**/*.spec.js\""
     },
     "dependencies": {
+        "chai": "^4.1.2",
+        "chai-spies": "^0.7.1",
         "jquery": "3.1.1",
         "lodash": "4.17.4"
     },
@@ -39,9 +41,7 @@
         "webpack": "2.2.1",
         "webpack-dev-server": "1.16.2",
         "webpack-node-externals": "1.5.4",
-        "webpack-version-file-plugin": "0.2.2",
-        "mock-browser": "^0.92.14",
-        "fs": "^0.0.2"
+        "webpack-version-file-plugin": "0.2.2"
     },
     "export-symbol": "extensionSkeleton.exports"
 }
