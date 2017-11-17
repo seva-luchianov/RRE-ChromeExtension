@@ -3,7 +3,7 @@ const spies = require('chai-spies');
 chai.use(spies);
 const assert = chai.assert;
 const expect = chai.expect;
-var main = require('../../src/js/content');
+// var main = require('../content');
 
 describe('main.js tests', () => {
 
