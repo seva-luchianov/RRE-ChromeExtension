@@ -7,3 +7,4 @@ mykey.pem
 /build
 /dev
 yarn.lock
+.tmp
