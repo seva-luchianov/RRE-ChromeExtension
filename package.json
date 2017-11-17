@@ -9,7 +9,7 @@
         ]
     },
     "main": "extension/main.js",
-        "scripts": {
+    "scripts": {
         "test": "nyc mocha ./test"
     },
     "repository": {
@@ -23,7 +23,8 @@
         "chai-spies": "^0.7.1",
         "chalk": "^2.1.0",
         "eslint": "^4.7.1",
-        "nyc": "^11.3.0"
+        "nyc": "^11.3.0",
+        "rewire": "^3.0.1"
     },
     "devDependencies": {
         "chai": "^4.0.2",
