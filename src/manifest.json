@@ -15,9 +15,6 @@
         "default_title": "Reddit Recommendation Engine"
     },
 
-    "name": "RRE Chrome Extension",
-    "version": "1.0",
-    "description": "Reddit Recommendation Engine For Google Chrome",
     "permissions": ["storage", "https://localhost:8080/*"],
 
     "content_scripts": [{

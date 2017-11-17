@@ -1,3 +1,28 @@
+//---------------------------------------------------------------------------------------
+// Configure mock browser
+
+/*var AbstractBrowser = require('mock-browser').delegates.AbstractBrowser;
+var MockBrowser = require('mock-browser').mocks.MockBrowser;
+
+// configure in some factory
+var opts = {};
+
+if (typeof window === 'object') {
+    // assign the browser window if it exists
+    opts.window = window;
+} else {
+    // create a mock window object for testing
+    opts.window = MockBrowser.createWindow();
+}
+
+// create the browser object with a real window in brwosers and mock when not in browser
+var browser = new AbstractBrowser(opts);
+
+var window = browser.getWindow();
+var document = browser.getDocument();*/
+
+//---------------------------------------------------------------------------------------
+
 // Setup the container
 var RREContainer = document.createElement("div");
 var header = document.createElement("div");
@@ -113,15 +138,8 @@ function createRecommendationDIV(subreddit) {
     parentDIV.appendChild(entry);
 }
 
-// First Time Setup
-/*chrome.runtime.onInstalled.addListener(function(details) {
-    if (details.reason == "install") {
-        console.log("First Time Setup Triggered");
-        chrome.runtime.openOptionsPage(function() {
-            refreshRecommendations();
-        });
-    } else if (details.reason == "update") {
-        var thisVersion = chrome.runtime.getManifest().version;
-        console.log("Updated from " + details.previousVersion + " to " + thisVersion + "!");
+module.exports = {
+    _createRecommendationDIV: function(subreddit) {
+        return createRecommendationDIV(subreddit);
     }
-});*/
+}

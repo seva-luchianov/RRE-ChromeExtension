@@ -3,15 +3,14 @@ const spies = require('chai-spies');
 chai.use(spies);
 const assert = chai.assert;
 const expect = chai.expect;
-var main = require('../../src/js/content');
+var content = require('../../src/js/content');
 
-describe('main.js tests', () => {
+describe('content.js tests', () => {
 
-    describe('These mains', () => {
-        describe('This main', () => {
-            it('This main does thing', () => {
+    describe('Test Content Functions', () => {
+        it('This main does thing', () => {
+            content._createRecommendationDIV('someName');
 
-            })
         });
     });
 });
