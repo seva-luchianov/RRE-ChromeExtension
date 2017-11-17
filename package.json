@@ -1,39 +1,45 @@
 {
-    "name": "RRE-ChromeExtension",
-    "version": "1.0.0",
-    "description": "Chrome extension component for our Reddit Recommendation Engine",
-    "nyc": {
-        "exclude": [
-            "*.pem",
-            "*.crt"
-        ]
-    },
-    "main": "extension/main.js",
-    "scripts": {
-        "test": "nyc mocha ./test"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Crazychicken563/RRE-ChromeExtension"
-    },
-    "author": "Alex Feldman, Jonathan Ligh, Seva Luchianov",
-    "license": "ISC",
-    "dependencies": {
-        "chai": "^4.1.2",
-        "chai-spies": "^0.7.1",
-        "chalk": "^2.1.0",
-        "eslint": "^4.7.1",
-        "nyc": "^11.3.0",
-        "rewire": "^3.0.1"
-    },
-    "devDependencies": {
-        "chai": "^4.0.2",
-        "chai-spies": "^0.7.1",
-        "chai-string": "^1.4.0",
-        "mocha": "^3.4.2",
-        "supertest": "^3.0.0"
-    },
-    "browser": {
-        "request": "xhr"
-    }
+  "name": "extension-skeleton",
+  "version": "0.3.0",
+  "description": "Bare Google Chrome extension skeleton.",
+  "engines": {
+    "node": "7.0.0",
+    "npm": "3.10.8"
+  },
+  "scripts": {
+    "build": "mkdir -p ./build/prod && webpack --config ./webpack/webpack.config.prod.js",
+    "start": "mkdir -p ./build/dev && webpack --config ./webpack/webpack.config.dev.js",
+    "lint": "eslint src/js/",
+    "test": "mocha-webpack --watch --webpack-config ./webpack/webpack.config.test.js \"src/js/**/*.spec.js\"",
+    "test:ci": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/js/**/*.spec.js\""
+  },
+  "dependencies": {
+    "jquery": "3.1.1",
+    "lodash": "4.17.4"
+  },
+  "devDependencies": {
+    "babel-core": "6.18.2",
+    "babel-eslint": "7.1.0",
+    "babel-loader": "6.2.7",
+    "babel-plugin-module-resolver": "2.3.0",
+    "babel-plugin-transform-runtime": "6.15.0",
+    "babel-preset-es2015": "6.18.0",
+    "babel-preset-stage-2": "6.18.0",
+    "copy-webpack-plugin": "4.0.1",
+    "crx-webpack-plugin": "0.1.5",
+    "css-loader": "0.26.0",
+    "eslint": "3.14.0",
+    "eslint-config-airbnb": "14.0.0",
+    "eslint-import-resolver-babel-module": "2.2.1",
+    "eslint-plugin-import": "2.2.0",
+    "eventemitter2": "0.4.14",
+    "mocha": "1.20.0",
+    "mocha-webpack": "0.7.0",
+    "sinon": "1.12.2",
+    "webpack": "2.2.1",
+    "webpack-dev-server": "1.16.2",
+    "webpack-node-externals": "1.5.4",
+    "webpack-version-file-plugin": "0.2.2"
+  },
+  "export-symbol": "extensionSkeleton.exports"
 }

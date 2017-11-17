@@ -12,7 +12,7 @@ settingsButton.addEventListener('click', function() {
         chrome.runtime.openOptionsPage();
     } else {
         // Reasonable fallback.
-        window.open(chrome.runtime.getURL('settings.html'));
+        window.open(chrome.runtime.getURL('./html/options.html'));
     }
 });
 header.appendChild(settingsButton);
@@ -59,7 +59,7 @@ function refreshRecommendations(deletedRecommendation) {
                 chrome.runtime.openOptionsPage();
             } else {
                 // Reasonable fallback.
-                window.open(chrome.runtime.getURL('settings.html'));
+                window.open(chrome.runtime.getURL('./html/options.html'));
             }
         } else {
             xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');

@@ -176,7 +176,7 @@ document.getElementById("blacklistInput").addEventListener("keydown", function(e
     if (event.keyCode === 13) {
         var blacklist = "";
         const regex = /[\w]+/g;
-        let m;
+        var m;
 
         while ((m = regex.exec(this.value)) !== null) {
             // This is necessary to avoid infinite loops with zero-width matches
@@ -185,10 +185,10 @@ document.getElementById("blacklistInput").addEventListener("keydown", function(e
             }
 
             // The result can be accessed through the `m`-variable.
-            m.forEach((match, groupIndex) => {
-                blacklist = match;
-                console.log(`Found match, group ${groupIndex}: ${match}`);
-            });
+            var i;
+            for (i in m) {
+                blacklist = m[i]
+            }
         }
         if (!blacklist) {
             var status = document.getElementById('blacklist-status');

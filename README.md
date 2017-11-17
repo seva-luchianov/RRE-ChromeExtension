@@ -1,1 +1,1 @@
-The RRE Chrome Extensions
+The RRE Chrome Extension
