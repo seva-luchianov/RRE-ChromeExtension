@@ -30,6 +30,7 @@ function save_options() {
                 RRETags: tags,
                 RREBlackList: blacklist
             }, function() {
+                document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
                 status.textContent = 'Values saved';
                 setTimeout(function() {
                     status.textContent = '';
@@ -42,34 +43,42 @@ function save_options() {
 function restore_options() {
     chrome.storage.sync.get({
         RRERecommendationLimit: '5',
-        RRETags: ["stories", "technology"],
-        RREBlackList: ["/r/news/", "/r/memes/"]
+        RRETags: undefined,
+        RREBlackList: []
     }, function(items) {
         console.log(items.RRERecommendationLimit);
         document.getElementById('recommendationLimit').value = items.RRERecommendationLimit;
 
         var i;
-        for (i in items.RRETags) {
-            createListEntry('tags', items.RRETags[i]);
+        for (i in items.RREBlackList) {
+            createListEntry('blacklist', items.RREBlackList[i], false);
         }
 
-        for (i in items.RREBlackList) {
-            createListEntry('blacklist', items.RREBlackList[i]);
+        if (!items.RRETags) {
+            // No Tag data, use First Time Setup logic
+            document.getElementById('first-time-setup-tags').setAttribute("class", "sliderVisible");
+            console.log("Range Bar Visible");
+        } else {
+            for (i in items.RRETags) {
+                createListEntry('tags', items.RRETags[i], false);
+            }
         }
     });
 }
 
-function createListEntry(parentID, name) {
+function createListEntry(parentID, name, displayStatus) {
     var parentDIV = document.getElementById(parentID);
     var i;
     for (i = 0; i < parentDIV.childElementCount; i++) {
         var existingName = parentDIV.children[i].children[0].innerHTML;
         if (existingName === name) {
-            var status = document.getElementById(parentID + "-status");
-            status.textContent = 'Entry already exists';
-            setTimeout(function() {
-                status.textContent = '';
-            }, 1000);
+            if (displayStatus) {
+                var status = document.getElementById(parentID + "-status");
+                status.textContent = 'Entry already exists';
+                setTimeout(function() {
+                    status.textContent = '';
+                }, 1000);
+            }
             return;
         }
     }
@@ -101,6 +110,36 @@ function createListEntry(parentID, name) {
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
 
+document.getElementById("first-time-setup-tags-range").addEventListener("change", function(event) {
+    var maxDistance = this.value;
+    console.log(maxDistance);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://localhost:8080/api/subreddits/getTagsForSubreddits');
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.onload = function() {
+        var response = JSON.parse(this.response);
+        var totalTags = Object.keys(response).length;
+        var tagListDIV = document.getElementById('tags');
+        // clear list if it has more tags than give (this can be optimized)
+        if (tagListDIV.childElementCount > totalTags) {
+            while (!!tagListDIV.firstChild) {
+                tagListDIV.removeChild(tagListDIV.firstChild);
+            }
+        }
+        // we dont have to clear list if it has less tags becuase createListEntry prevents duplicates
+        var tag;
+        for (tag in response) {
+            createListEntry('tags', tag, false);
+        }
+    }
+    xhr.send(JSON.stringify({
+        subreddits: [
+            "/r/news/"
+        ],
+        maxDistance: maxDistance
+    }));
+});
+
 document.getElementById("tagsInput").addEventListener("keydown", function(event) {
     if (event.keyCode === 13) {
         var textbox = this;
@@ -116,7 +155,7 @@ document.getElementById("tagsInput").addEventListener("keydown", function(event)
                     tagExists = tagExists || (response[i].name === textbox.value);
                 }
                 if (tagExists) {
-                    createListEntry('tags', textbox.value);
+                    createListEntry('tags', textbox.value, true);
                     textbox.value = "";
                 } else {
                     var status = document.getElementById('tags-status');
@@ -160,7 +199,7 @@ document.getElementById("blacklistInput").addEventListener("keydown", function(e
         } else {
             blacklist = "/r/" + blacklist + "/";
             console.log("final cleanup: " + blacklist);
-            createListEntry('blacklist', tag);
+            createListEntry('blacklist', tag, true);
             this.value = "";
         }
     }
