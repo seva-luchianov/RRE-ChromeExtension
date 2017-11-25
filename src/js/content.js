@@ -23,6 +23,8 @@ var document = browser.getDocument();*/
 
 //---------------------------------------------------------------------------------------
 
+var loadingNewRecommendations = false;
+
 // Setup the container
 var RREContainer = document.createElement("div");
 var header = document.createElement("div");
@@ -58,6 +60,7 @@ xhr.onload = function() {
         chrome.storage.sync.set({
             RRERecommendations: response
         }, function() {
+            loadingNewRecommendations = false;
             populateRecommendations(response);
         });
     } else {
@@ -94,16 +97,22 @@ function refreshRecommendations(deletedRecommendation) {
                 'RRERecommendations'
             ], function(items) {
                 if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + 10) {
-                    // not enough recommendations stored, need to query for more.
-                    // we do have seed data, need to update recommendations
-                    xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
-                    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    xhr.send(JSON.stringify({
-                        tags: seedData.RRETags,
-                        subscribed: [],
-                        blacklisted: seedData.RREBlackList,
-                        maxRecommendations: 30
-                    }));
+                    if (!loadingNewRecommendations) {
+                        // not enough recommendations stored, need to query for more.
+                        loadingNewRecommendations = true;
+                        // we do have seed data, need to update recommendations
+                        xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
+                        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                        xhr.send(JSON.stringify({
+                            tags: seedData.RRETags,
+                            subscribed: [],
+                            blacklisted: seedData.RREBlackList,
+                            maxRecommendations: 30
+                        }));
+                    } else {
+                        // we should still have enough recommendations, lets show them.
+                        populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
+                    }
                 } else {
                     // we have recommendations, lets show them.
                     populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
