@@ -41,12 +41,18 @@ function save_options() {
 }
 
 function restore_options() {
-    chrome.storage.sync.get({
-        RRERecommendationLimit: '5',
-        RRETags: undefined,
-        RREBlackList: []
-    }, function(items) {
+    chrome.storage.sync.get([
+        'RRERecommendationLimit',
+        'RRETags',
+        'RREBlackList'
+    ], function(items) {
         console.log(items.RRERecommendationLimit);
+        if (!items.RRERecommendationLimit) {
+            items.RRERecommendationLimit = 5;
+        }
+        if (!items.RREBlackList) {
+            items.RREBlackList = [];
+        }
         document.getElementById('recommendationLimit').value = items.RRERecommendationLimit;
 
         var i;

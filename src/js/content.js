@@ -53,15 +53,15 @@ sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 
 var xhr = new XMLHttpRequest();
 xhr.onload = function() {
-    var recommendationsListDIV = document.getElementById("recommendations");
     if (this.status === 200) {
         var response = JSON.parse(this.response);
-        var i;
-        for (i = recommendationsListDIV.childElementCount + 1; i < response.length; i++) {
-            createRecommendationDIV(response[i].subreddit);
-        }
+        chrome.storage.sync.set({
+            RRERecommendations: response
+        }, function() {
+            populateRecommendations(response);
+        });
     } else {
-        recommendationsListDIV.appendChild(document.createTextNode("No Recommendations :("));
+        alert("RRE Server Error: " + this.status);
     }
 };
 
@@ -76,8 +76,10 @@ function refreshRecommendations(deletedRecommendation) {
         'RRERecommendationLimit',
         'RRETags',
         'RREBlackList'
-    ], function(items) {
-        if (!items.RRETags || !items.RREBlackList || !items.RRERecommendationLimit) {
+    ], function(seedData) {
+        // Do we have seed data?
+        if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
+            // No seed data, first time setup.
             console.log("First Time Setup Triggered");
             if (chrome.runtime.openOptionsPage) {
                 // New way to open options pages, if supported (Chrome 42+).
@@ -87,16 +89,65 @@ function refreshRecommendations(deletedRecommendation) {
                 window.open(chrome.runtime.getURL('./html/options.html'));
             }
         } else {
-            xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
-            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xhr.send(JSON.stringify({
-                tags: items.RRETags,
-                subscribed: [],
-                blacklisted: items.RREBlackList,
-                maxRecommendations: items.RRERecommendationLimit
-            }));
+            // we have seed data, do we have recommendations?
+            chrome.storage.sync.get([
+                'RRERecommendations'
+            ], function(items) {
+                if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + 10) {
+                    // not enough recommendations stored, need to query for more.
+                    // we do have seed data, need to update recommendations
+                    xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
+                    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xhr.send(JSON.stringify({
+                        tags: seedData.RRETags,
+                        subscribed: [],
+                        blacklisted: seedData.RREBlackList,
+                        maxRecommendations: 30
+                    }));
+                } else {
+                    // we have recommendations, lets show them.
+                    populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
+                }
+            });
         }
     });
+}
+
+function populateRecommendations(recommendations, recommendationLimit, blackList) {
+    chrome.storage.sync.get([
+        'RRERecommendationLimit',
+        'RRERecommendations',
+        'RREBlackList'
+    ], function(items) {
+        var recommendationsListDIV = document.getElementById("recommendations");
+        if (items.RRERecommendations.length !== 0) {
+            var i = 0;
+            var encounteredBlacklist = 0;
+            while (i < items.RRERecommendationLimit + encounteredBlacklist) {
+                if (items.RREBlackList.indexOf(items.RRERecommendations[i].subreddit) === -1) {
+                    if (!isRecommendationDisplayed(items.RRERecommendations[i].subreddit)) {
+                        createRecommendationDIV(items.RRERecommendations[i].subreddit);
+                    }
+                } else {
+                    encounteredBlacklist++;
+                }
+                i++;
+            }
+        } else {
+            recommendationsListDIV.appendChild(document.createTextNode("No More Recommendations :("));
+        }
+    });
+}
+
+function isRecommendationDisplayed(subreddit) {
+    var recommendationsListDIV = document.getElementById("recommendations");
+    var i;
+    for (i = 0; i < recommendationsListDIV.children.length; i++) {
+        if (recommendationsListDIV.children[i].firstChild.innerHTML === subreddit) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function createRecommendationDIV(subreddit) {
@@ -122,13 +173,28 @@ function createRecommendationDIV(subreddit) {
     deleteButton.addEventListener('click', function() {
         var entryToDelete = document.getElementById(this.parentElement.id);
         chrome.storage.sync.get([
-            'RREBlackList'
+            'RREBlackList',
+            'RRERecommendations'
         ], function(items) {
             var blacklist = items.RREBlackList;
             var newBlacklistEntry = entryToDelete.children[0].innerHTML
             blacklist.push(newBlacklistEntry);
+
+            var recommendations = items.RRERecommendations;
+            var index = -1;
+            var i;
+            for (i = 0; i < recommendations.length; i++) {
+                if (recommendations[i].subreddit === newBlacklistEntry) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index > -1) {
+                recommendations.splice(index, 1);
+            }
             chrome.storage.sync.set({
-                RREBlackList: blacklist
+                RREBlackList: blacklist,
+                RRERecommendations: recommendations
             }, function() {
                 refreshRecommendations(entryToDelete);
             });
