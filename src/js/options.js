@@ -25,16 +25,26 @@ function save_options() {
             console.log(tags);
             console.log(blacklist);
 
-            chrome.storage.sync.set({
+            saveData = {
                 RRERecommendationLimit: maxRecommendations,
                 RRETags: tags,
                 RREBlackList: blacklist
-            }, function() {
-                document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
-                status.textContent = 'Values saved';
-                setTimeout(function() {
-                    status.textContent = '';
-                }, 1000);
+            };
+
+            chrome.storage.sync.get([
+                'RRETags'
+            ], function(items) {
+                // If tags modified, refresh recommendations
+                if (saveData.RRETags !== items.RRETags) {
+                    saveData.RRERecommendations = [];
+                }
+                chrome.storage.sync.set(saveData, function() {
+                    document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
+                    status.textContent = 'Values saved';
+                    setTimeout(function() {
+                        status.textContent = '';
+                    }, 1000);
+                });
             });
         }
     }
@@ -113,7 +123,25 @@ function createListEntry(parentID, name, displayStatus) {
     parentDIV.appendChild(entry);
 }
 
-document.addEventListener('DOMContentLoaded', restore_options);
+document.addEventListener('DOMContentLoaded', function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://localhost:8080/api/tags/');
+    xhr.onload = function() {
+        if (this.status === 200) {
+            var tagOptionList = document.getElementById('tagOptionList');
+            var response = JSON.parse(this.response);
+            var i;
+            for (i in response) {
+                var option = document.createElement("option");
+                option.setAttribute("value", response[i].name);
+                tagOptionList.appendChild(option);
+            }
+        }
+    };
+    xhr.send();
+    restore_options();
+});
+
 document.getElementById('save').addEventListener('click', save_options);
 
 document.getElementById("first-time-setup-tags-range").addEventListener("change", function(event) {
@@ -148,33 +176,26 @@ document.getElementById("first-time-setup-tags-range").addEventListener("change"
 
 document.getElementById("tagsInput").addEventListener("keydown", function(event) {
     if (event.keyCode === 13) {
+        var tagOptionList = document.getElementById('tagOptionList');
         var textbox = this;
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'https://localhost:8080/api/tags/');
-        xhr.onload = function() {
-            if (this.status === 200) {
-                var response = JSON.parse(this.response);
-                var tagExists = false;
-                var i;
-                for (i in response) {
-                    tagExists = tagExists || (response[i].name === textbox.value);
-                }
-                if (tagExists) {
-                    createListEntry('tags', textbox.value, true);
-                    textbox.value = "";
-                } else {
-                    var status = document.getElementById('tags-status');
-                    status.textContent = 'Tag Not Found';
-                    setTimeout(function() {
-                        status.textContent = '';
-                    }, 1000);
-                }
-            } else {
-                // Fucking RIP
+        var tagFound = false;
+        var i;
+        for (i = 0; i < tagOptionList.options.length; i++) {
+            if (tagOptionList.options[i].value === textbox.value) {
+                tagFound = true;
+                break;
             }
-        };
-        xhr.send();
+        }
+        if (tagFound) {
+            createListEntry('tags', textbox.value, true);
+            textbox.value = "";
+        } else {
+            var status = document.getElementById('tags-status');
+            status.textContent = 'Tag Not Found';
+            setTimeout(function() {
+                status.textContent = '';
+            }, 1000);
+        }
     }
 });
 

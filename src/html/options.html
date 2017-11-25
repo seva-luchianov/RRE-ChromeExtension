@@ -13,7 +13,9 @@
             <input type="textbox" id="recommendationLimit">
             <br>
             <div class="header">Tags:</div>
-            <input type="textbox" id="tagsInput">
+            <input type="text" id="tagsInput" list="tagOptionList"/>
+            <datalist id="tagOptionList">
+            </datalist>
             <div class="slider" id="first-time-setup-tags">
                 <input type="range" min="1" max="50" value="5" id="first-time-setup-tags-range">
             </div>
