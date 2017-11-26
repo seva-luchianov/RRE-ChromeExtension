@@ -56,7 +56,6 @@ function restore_options() {
         'RRETags',
         'RREBlackList'
     ], function(items) {
-        console.log(items.RRERecommendationLimit);
         if (!items.RRERecommendationLimit) {
             items.RRERecommendationLimit = 5;
         }
@@ -100,7 +99,6 @@ function createListEntry(parentID, name, displayStatus) {
     }
 
     var id = parentID + "-" + name;
-    console.log("Entry: " + name);
 
     var entry = document.createElement("div");
     entry.setAttribute("id", id);
@@ -113,7 +111,7 @@ function createListEntry(parentID, name, displayStatus) {
 
     var deleteButton = document.createElement("button");
     deleteButton.setAttribute("class", "deleteButton");
-    deleteButton.innerHTML = 'X';
+    deleteButton.innerHTML = '&times;';
     // deleteButton.setAttribute("id", "delete-" + tagName);
     deleteButton.addEventListener('click', function() {
         var deleteThis = document.getElementById(this.parentElement.id);
@@ -127,9 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://localhost:8080/api/tags/');
     xhr.onload = function() {
+        console.log(this.status);
         if (this.status === 200) {
             var tagOptionList = document.getElementById('tagOptionList');
             var response = JSON.parse(this.response);
+            console.log("tags loaded");
             var i;
             for (i in response) {
                 var option = document.createElement("option");
@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
+    console.log("loading tags");
     xhr.send();
     restore_options();
 });

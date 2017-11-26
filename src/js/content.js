@@ -24,34 +24,55 @@ var document = browser.getDocument();*/
 //---------------------------------------------------------------------------------------
 
 var loadingNewRecommendations = false;
-
 // Setup the container
 var RREContainer = document.createElement("div");
-var header = document.createElement("div");
-header.appendChild(document.createTextNode("Recommendations:"));
-
-var settingsButton = document.createElement('button');
-//settingsButton.setAttribute('id', "go-to-options");
-settingsButton.innerHTML = "Settings";
-settingsButton.addEventListener('click', function() {
-    if (chrome.runtime.openOptionsPage) {
-        // New way to open options pages, if supported (Chrome 42+).
-        chrome.runtime.openOptionsPage();
-    } else {
-        // Reasonable fallback.
-        window.open(chrome.runtime.getURL('./html/options.html'));
-    }
-});
-header.appendChild(settingsButton);
-RREContainer.appendChild(header);
-
-var recommendationsListDIV = document.createElement("lu");
-recommendationsListDIV.setAttribute("id", "recommendations");
-RREContainer.appendChild(recommendationsListDIV);
+RREContainer.setAttribute('class', 'spacer');
+var manifest = chrome.runtime.getURL('./manifest.json');
+var optionshtml = chrome.runtime.getURL('./html/options.html');
+console.log(optionshtml);
+RREContainer.innerHTML =
+    `<div>
+        <link rel="manifest" href="${manifest}">
+        <div>
+            <div style="display:inline; font-size:16px; font-weight:bold;">Recommendations:</div>
+            <button id="settings-button" style="position:relative; left: 28%">Settings</button>
+        </div>
+        <lu id=recommendations>
+        </lu>
+        <div id="optionswrapper" class="optionswrapper">
+            <div class="optionswrapper-content">
+                <span id="close-optionswrapper" class="close">&times;</span>
+                <object style="height: inherit; width: inherit;" type="text/html" data="${optionshtml}"></object>
+            </div>
+        </div>
+    </div>`;
 
 // Inject into reddit sidebar
 var sideBarDiv = document.getElementsByClassName("side")[0];
 sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
+
+var settingsButton = document.getElementById('settings-button');
+settingsButton.addEventListener('click', function() {
+    document.getElementById('optionswrapper').style.display = "block";
+    // window.open(chrome.runtime.getURL('./html/options.html'));
+});
+
+// Get the modal
+var modal = document.getElementById('optionswrapper');
+// Get the <span> element that closes the modal
+var closeButton = document.getElementById("close-optionswrapper");
+
+// When the user clicks on <span> (x), close the modal
+closeButton.onclick = function() {
+    modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
 
 var xhr = new XMLHttpRequest();
 xhr.onload = function() {
@@ -162,7 +183,6 @@ function isRecommendationDisplayed(subreddit) {
 function createRecommendationDIV(subreddit) {
     var parentDIV = document.getElementById("recommendations");
     var id = "recommendations-" + subreddit;
-    console.log("Entry: " + subreddit);
 
     var entry = document.createElement("div");
     entry.setAttribute("id", id);
@@ -178,7 +198,7 @@ function createRecommendationDIV(subreddit) {
 
     var deleteButton = document.createElement("button");
     deleteButton.setAttribute("class", "deleteButton");
-    deleteButton.innerHTML = 'X';
+    deleteButton.innerHTML = '&times;';
     deleteButton.addEventListener('click', function() {
         var entryToDelete = document.getElementById(this.parentElement.id);
         chrome.storage.sync.get([

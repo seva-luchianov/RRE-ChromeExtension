@@ -1,46 +1,84 @@
-/*body {
-  background: #fff !important;
-}*/
-
-div.header {
-  font-weight: bold;
-}
-
 .recommendation {
-  color: #0645AD;
-  cursor: pointer;
-  display: block;
+    border-left-width: 1px;
+    padding-left: 8px;
+    border-left-style: solid;
+    color: #0645AD;
+    cursor: pointer;
+    display: block;
 }
 
 .recommendation:hover {
-  color: #0645AD;
-  text-decoration: underline;
-  cursor: pointer;
-  display: block;
+    border-left-width: 1px;
+    padding-left: 8px;
+    border-left-style: solid;
+    color: #0645AD;
+    text-decoration: underline;
+    cursor: pointer;
+    display: block;
 }
 
 .deleteButton {
-  -webkit-border-radius: 60;
-  -moz-border-radius: 60;
-  border-radius: 60px;
-  text-shadow: 1px 1px 3px #ffdbdb;
-  font-family: Arial;
-  color: #000000;
-  font-size: 14px;
-  background: #ffffff;
-  padding: 5px 8px 5px 8px;
-  border: solid #000000 2px;
-  text-decoration: none;
+    -webkit-border-radius: 40;
+    -moz-border-radius: 40;
+    border-radius: 40px;
+    text-shadow: 1px 1px 3px #ffdbdb;
+    font-family: Arial;
+    color: #000000;
+    font-size: 14px;
+    background: #ffffff;
+    padding: 1px 5px 1px 5px;
+    border: solid #000000 2px;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-left: 5px;
 }
 
 .deleteButton:hover {
-  background: #ff0000;
-  text-decoration: none;
+    background: #ff0000;
+    text-decoration: none;
 }
 
 .slider {
-  display: none;
+    display: none;
 }
 
-.sliderVisible {
+.sliderVisible {}
+
+.optionswrapper {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.optionswrapper-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    height: 80%;
+    width: max-content;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
 }
