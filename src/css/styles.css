@@ -38,11 +38,18 @@
     text-decoration: none;
 }
 
+.title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
 .slider {
     display: none;
 }
 
-.sliderVisible {}
+.sliderVisible {
+    display: inline;
+}
 
 .optionswrapper {
     display: none; /* Hidden by default */

@@ -1,3 +1,5 @@
+const utils = require('./utils');
+
 //---------------------------------------------------------------------------------------
 // Configure mock browser
 
@@ -23,16 +25,15 @@ var document = browser.getDocument();*/
 
 //---------------------------------------------------------------------------------------
 
+// Some Globals
 var loadingNewRecommendations = false;
+
 // Setup the container
 var RREContainer = document.createElement("div");
 RREContainer.setAttribute('class', 'spacer');
-var manifest = chrome.runtime.getURL('./manifest.json');
-var optionshtml = chrome.runtime.getURL('./html/options.html');
-console.log(optionshtml);
+const optionshtml = chrome.runtime.getURL('./html/options.html');
 RREContainer.innerHTML =
     `<div>
-        <link rel="manifest" href="${manifest}">
         <div>
             <div style="display:inline; font-size:16px; font-weight:bold;">Recommendations:</div>
             <button id="settings-button" style="position:relative; left: 28%">Settings</button>
@@ -51,27 +52,56 @@ RREContainer.innerHTML =
 var sideBarDiv = document.getElementsByClassName("side")[0];
 sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 
-var settingsButton = document.getElementById('settings-button');
-settingsButton.addEventListener('click', function() {
-    document.getElementById('optionswrapper').style.display = "block";
-    // window.open(chrome.runtime.getURL('./html/options.html'));
+var oldSettings = {};
+
+document.getElementById('settings-button').addEventListener('click', function() {
+    chrome.storage.sync.get([
+        'RRERecommendationLimit',
+        'RREBlackList'
+    ], function(items) {
+        oldSettings = items;
+        document.getElementById('optionswrapper').style.display = "block";
+    });
 });
 
-// Get the modal
-var modal = document.getElementById('optionswrapper');
-// Get the <span> element that closes the modal
-var closeButton = document.getElementById("close-optionswrapper");
-
 // When the user clicks on <span> (x), close the modal
-closeButton.onclick = function() {
-    modal.style.display = "none";
+document.getElementById("close-optionswrapper").onclick = function() {
+    closeModalAndUpdateRecommendations();
 }
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
+    if (event.target == document.getElementById("optionswrapper")) {
+        closeModalAndUpdateRecommendations();
     }
+}
+
+function closeModalAndUpdateRecommendations() {
+    chrome.storage.sync.get([
+        'RRERecommendationLimit',
+        'RREBlackList'
+    ], function(items) {
+        document.getElementById('optionswrapper').style.display = "none";
+        if (oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
+            refreshRecommendations(true);
+            oldSettings = {};
+            return;
+        }
+        // If blacklist modified, refresh recommendations
+        if (oldSettings.RREBlackList.length !== items.RREBlackList.length) {
+            refreshRecommendations(true);
+            oldSettings = {};
+            return;
+        } else {
+            for (i = 0; i < oldSettings.RREBlackList.length; i++) {
+                if (oldSettings.RREBlackList[i] !== items.RREBlackList[i]) {
+                    refreshRecommendations(true);
+                    oldSettings = {};
+                    return;
+                }
+            }
+        }
+    });
 }
 
 var xhr = new XMLHttpRequest();
@@ -92,8 +122,15 @@ xhr.onload = function() {
 refreshRecommendations();
 
 function refreshRecommendations(deletedRecommendation) {
-    if (!!deletedRecommendation) {
-        recommendationsListDIV.removeChild(deletedRecommendation);
+    if (deletedRecommendation) {
+        var recommendationsListDIV = document.getElementById('recommendations');
+        if (typeof deletedRecommendation === 'boolean') {
+            while (!!recommendationsListDIV.firstElementChild) {
+                recommendationsListDIV.removeChild(recommendationsListDIV.firstElementChild);
+            }
+        } else {
+            recommendationsListDIV.removeChild(deletedRecommendation);
+        }
     }
 
     chrome.storage.sync.get([
@@ -105,13 +142,7 @@ function refreshRecommendations(deletedRecommendation) {
         if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
             // No seed data, first time setup.
             console.log("First Time Setup Triggered");
-            if (chrome.runtime.openOptionsPage) {
-                // New way to open options pages, if supported (Chrome 42+).
-                chrome.runtime.openOptionsPage();
-            } else {
-                // Reasonable fallback.
-                window.open(chrome.runtime.getURL('./html/options.html'));
-            }
+            document.getElementById('optionswrapper').style.display = "block";
         } else {
             // we have seed data, do we have recommendations?
             chrome.storage.sync.get([
@@ -153,10 +184,18 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
         if (items.RRERecommendations.length !== 0) {
             var i = 0;
             var encounteredBlacklist = 0;
+
+            function deleteCallback(value) {
+                utils.saveBlacklist(value, function() {
+                    refreshRecommendations(document.getElementById("recommendations-" + value));
+                });
+            }
+
             while (i < items.RRERecommendationLimit + encounteredBlacklist) {
                 if (items.RREBlackList.indexOf(items.RRERecommendations[i].subreddit) === -1) {
                     if (!isRecommendationDisplayed(items.RRERecommendations[i].subreddit)) {
-                        createRecommendationDIV(items.RRERecommendations[i].subreddit);
+                        var value = items.RRERecommendations[i].subreddit;
+                        utils.createListEntryDIV("recommendations", value, false, deleteCallback);
                     }
                 } else {
                     encounteredBlacklist++;
@@ -180,7 +219,7 @@ function isRecommendationDisplayed(subreddit) {
     return false;
 }
 
-function createRecommendationDIV(subreddit) {
+/*function createRecommendationDIV(subreddit) {
     var parentDIV = document.getElementById("recommendations");
     var id = "recommendations-" + subreddit;
 
@@ -201,40 +240,10 @@ function createRecommendationDIV(subreddit) {
     deleteButton.innerHTML = '&times;';
     deleteButton.addEventListener('click', function() {
         var entryToDelete = document.getElementById(this.parentElement.id);
-        chrome.storage.sync.get([
-            'RREBlackList',
-            'RRERecommendations'
-        ], function(items) {
-            var blacklist = items.RREBlackList;
-            var newBlacklistEntry = entryToDelete.children[0].innerHTML
-            blacklist.push(newBlacklistEntry);
-
-            var recommendations = items.RRERecommendations;
-            var index = -1;
-            var i;
-            for (i = 0; i < recommendations.length; i++) {
-                if (recommendations[i].subreddit === newBlacklistEntry) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index > -1) {
-                recommendations.splice(index, 1);
-            }
-            chrome.storage.sync.set({
-                RREBlackList: blacklist,
-                RRERecommendations: recommendations
-            }, function() {
-                refreshRecommendations(entryToDelete);
-            });
+        utils.saveBlacklist(entryToDelete.children[0].innerHTML, function() {
+            refreshRecommendations(entryToDelete);
         });
     });
     entry.appendChild(deleteButton);
     parentDIV.appendChild(entry);
-}
-
-module.exports = {
-    _createRecommendationDIV: function(subreddit) {
-        return createRecommendationDIV(subreddit);
-    }
-}
+}*/

@@ -11,13 +11,15 @@
         <div class="settings">
             <div class="header">Max Recommendations: </div>
             <input type="textbox" id="recommendationLimit">
+            <div id="recommendation-limit-status"></div>
             <br>
             <div class="header">Tags:</div>
-            <input type="text" id="tagsInput" list="tagOptionList"/>
-            <datalist id="tagOptionList">
-            </datalist>
+            <select id="tagsInput">
+                <option value="" disabled selected>Add a tag</option>
+            </select>
             <div class="slider" id="first-time-setup-tags">
                 <input type="range" min="1" max="50" value="5" id="first-time-setup-tags-range">
+                <button id="first-time-setup-done">Save Tags</button>
             </div>
             <div id="tags-status"></div>
             <div id="tags"></div>
@@ -27,8 +29,6 @@
             <div id="blacklist-status"></div>
             <div id="blacklist"></div>
             <br>
-            <button id="save">Save</button>
-            <div id="save-status"></div>
         </div>
         <script src="../js/options.js"></script>
     </body>

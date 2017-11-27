@@ -1,3 +1,5 @@
+const utils = require('./utils');
+
 function save_options() {
     var maxRecommendations = parseInt(document.getElementById('recommendationLimit').value);
     var status = document.getElementById('save-status');
@@ -34,9 +36,16 @@ function save_options() {
             chrome.storage.sync.get([
                 'RRETags'
             ], function(items) {
-                // If tags modified, refresh recommendations
-                if (saveData.RRETags !== items.RRETags) {
+                // If tags modified, clear chached recommendations
+                if (saveData.RRETags.length !== items.RRETags.length) {
                     saveData.RRERecommendations = [];
+                } else {
+                    for (i = 0; i < saveData.RRETags.length; i++) {
+                        if (saveData.RRETags[i] !== items.RRETags[i]) {
+                            saveData.RRERecommendations = [];
+                            break;
+                        }
+                    }
                 }
                 chrome.storage.sync.set(saveData, function() {
                     document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
@@ -64,9 +73,16 @@ function restore_options() {
         }
         document.getElementById('recommendationLimit').value = items.RRERecommendationLimit;
 
+        function deleteBlacklistCallback(subreddit) {
+            utils.saveBlacklist(subreddit, function() {
+                document.getElementById("blacklist").removeChild(document.getElementById("blacklist-" + subreddit));
+            });
+        }
+
         var i;
         for (i in items.RREBlackList) {
-            createListEntry('blacklist', items.RREBlackList[i], false);
+            var subreddit = items.RREBlackList[i].subreddit;
+            utils.createListEntryDIV('blacklist', subreddit, false, deleteBlacklistCallback);
         }
 
         if (!items.RRETags) {
@@ -74,14 +90,18 @@ function restore_options() {
             document.getElementById('first-time-setup-tags').setAttribute("class", "sliderVisible");
             console.log("Range Bar Visible");
         } else {
+            function deleteTagCallback(tag) {
+                document.getElementById('tags').removeChild(document.getElementById("tags-" + tag));
+            }
             for (i in items.RRETags) {
-                createListEntry('tags', items.RRETags[i], false);
+                var tag = items.RRETags[i];
+                utils.createListEntryDIV('tags', tag, false, deleteTagCallback);
             }
         }
     });
 }
 
-function createListEntry(parentID, name, displayStatus) {
+/*function createListEntry(parentID, name, displayStatus) {
     var parentDIV = document.getElementById(parentID);
     var i;
     for (i = 0; i < parentDIV.childElementCount; i++) {
@@ -119,7 +139,7 @@ function createListEntry(parentID, name, displayStatus) {
     });
     entry.appendChild(deleteButton);
     parentDIV.appendChild(entry);
-}
+}*/
 
 document.addEventListener('DOMContentLoaded', function() {
     var xhr = new XMLHttpRequest();
@@ -127,14 +147,14 @@ document.addEventListener('DOMContentLoaded', function() {
     xhr.onload = function() {
         console.log(this.status);
         if (this.status === 200) {
-            var tagOptionList = document.getElementById('tagOptionList');
+            var tagsInput = document.getElementById('tagsInput');
             var response = JSON.parse(this.response);
             console.log("tags loaded");
             var i;
             for (i in response) {
                 var option = document.createElement("option");
-                option.setAttribute("value", response[i].name);
-                tagOptionList.appendChild(option);
+                option.text = response[i].name;
+                tagsInput.add(option);
             }
         }
     };
@@ -142,8 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
     xhr.send();
     restore_options();
 });
-
-document.getElementById('save').addEventListener('click', save_options);
 
 document.getElementById("first-time-setup-tags-range").addEventListener("change", function(event) {
     var maxDistance = this.value;
@@ -156,15 +174,19 @@ document.getElementById("first-time-setup-tags-range").addEventListener("change"
         var totalTags = Object.keys(response).length;
         var tagListDIV = document.getElementById('tags');
         // clear list if it has more tags than give (this can be optimized)
+        // we dont have to clear list if it has less tags because createListEntry prevents duplicates
         if (tagListDIV.childElementCount > totalTags) {
             while (!!tagListDIV.firstChild) {
                 tagListDIV.removeChild(tagListDIV.firstChild);
             }
         }
-        // we dont have to clear list if it has less tags becuase createListEntry prevents duplicates
+
+        function deleteCallback(tag) {
+            tagListDIV.removeChild(document.getElementById("tags-" + tag));
+        }
         var tag;
         for (tag in response) {
-            createListEntry('tags', tag, false);
+            utils.createListEntryDIV('tags', tag, false, deleteCallback);
         }
     }
     xhr.send(JSON.stringify({
@@ -175,34 +197,88 @@ document.getElementById("first-time-setup-tags-range").addEventListener("change"
     }));
 });
 
-document.getElementById("tagsInput").addEventListener("keydown", function(event) {
+document.getElementById("recommendationLimit").addEventListener("keyup", function(event) {
     if (event.keyCode === 13) {
-        var tagOptionList = document.getElementById('tagOptionList');
-        var textbox = this;
-        var tagFound = false;
-        var i;
-        for (i = 0; i < tagOptionList.options.length; i++) {
-            if (tagOptionList.options[i].value === textbox.value) {
-                tagFound = true;
-                break;
-            }
-        }
-        if (tagFound) {
-            createListEntry('tags', textbox.value, true);
-            textbox.value = "";
+        var maxRecommendations = parseInt(document.getElementById('recommendationLimit').value);
+        var status = document.getElementById('recommendation-limit-status');
+        if (isNaN(maxRecommendations)) {
+            status.textContent = 'Value must be integer';
         } else {
-            var status = document.getElementById('tags-status');
-            status.textContent = 'Tag Not Found';
-            setTimeout(function() {
-                status.textContent = '';
-            }, 1000);
+            if (maxRecommendations < 0) {
+                status.textContent = 'Value must be at least 1';
+            } else {
+                chrome.storage.sync.set({
+                    RRERecommendationLimit: maxRecommendations
+                }, function() {
+                    document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
+                    status.textContent = 'Values saved';
+                    setTimeout(function() {
+                        status.textContent = '';
+                    }, 1000);
+                });
+            }
         }
     }
 });
 
-document.getElementById("blacklistInput").addEventListener("keydown", function(event) {
+document.getElementById("tagsInput").addEventListener("change", function(event) {
+    var self = this;
+    var tag = self.value;
+    var added = utils.createListEntryDIV('tags', tag, true, function() {
+        document.getElementById('tags').removeChild(document.getElementById("tags-" + tag));
+    });
+
+    if (added) {
+        saveTags(function() {
+            self.value = "";
+        });
+    }
+});
+
+document.getElementById("first-time-setup-done").addEventListener("click", function(event) {
+    document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
+    saveTags(function() {
+        chrome.storage.sync.get([
+            'RRERecommendationLimit',
+            'RREBlackList'
+        ], function(items) {
+            var update = false;
+            if (!items.RRERecommendationLimit) {
+                items.RRERecommendationLimit = 5;
+                update = true;
+            }
+            if (!items.RREBlackList) {
+                items.RREBlackList = [];
+                update = true;
+            }
+            if (update) {
+                chrome.storage.sync.set({
+                    RRERecommendationLimit: items.RRERecommendationLimit,
+                    RREBlackList: items.RREBlackList
+                });
+            }
+        });
+    });
+});
+
+function saveTags(callback) {
+    var tags = [];
+    var tagsDIV = document.getElementById('tags');
+
+    var i;
+    for (i = 0; i < tagsDIV.childElementCount; i++) {
+        tags.push(tagsDIV.children[i].children[0].innerHTML);
+    }
+
+    chrome.storage.sync.set({
+        RRETags: tags
+    }, callback);
+}
+
+document.getElementById("blacklistInput").addEventListener("keyup", function(event) {
     if (event.keyCode === 13) {
-        var blacklist = "";
+        var blacklistInput = this;
+        var subreddit = "";
         const regex = /[\w]+/g;
         var m;
 
@@ -215,20 +291,23 @@ document.getElementById("blacklistInput").addEventListener("keydown", function(e
             // The result can be accessed through the `m`-variable.
             var i;
             for (i in m) {
-                blacklist = m[i]
+                subreddit = m[i]
             }
         }
-        if (!blacklist) {
+        if (!subreddit) {
             var status = document.getElementById('blacklist-status');
             status.textContent = 'Input cannot be interpreted as subreddit';
             setTimeout(function() {
                 status.textContent = '';
             }, 1000);
         } else {
-            blacklist = "/r/" + blacklist + "/";
-            console.log("final cleanup: " + blacklist);
-            createListEntry('blacklist', tag, true);
-            this.value = "";
+            subreddit = "/r/" + subreddit + "/";
+            utils.createListEntryDIV('blacklist', subreddit, true, function() {
+                utils.saveBlacklist(subreddit, undefined);
+            });
+            utils.saveBlacklist(subreddit, function() {
+                blacklistInput.value = "";
+            });
         }
     }
 });
