@@ -191,59 +191,14 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
                 });
             }
 
-            while (i < items.RRERecommendationLimit + encounteredBlacklist) {
+            while (recommendationsListDIV.children.length < items.RRERecommendationLimit) {
                 if (items.RREBlackList.indexOf(items.RRERecommendations[i].subreddit) === -1) {
-                    if (!isRecommendationDisplayed(items.RRERecommendations[i].subreddit)) {
-                        var value = items.RRERecommendations[i].subreddit;
-                        utils.createListEntryDIV("recommendations", value, false, deleteCallback);
-                    }
-                } else {
-                    encounteredBlacklist++;
+                    var value = items.RRERecommendations[i].subreddit;
+                    utils.createListEntryDIV("recommendations", value, false, deleteCallback);
                 }
-                i++;
             }
         } else {
             recommendationsListDIV.appendChild(document.createTextNode("No More Recommendations :("));
         }
     });
 }
-
-function isRecommendationDisplayed(subreddit) {
-    var recommendationsListDIV = document.getElementById("recommendations");
-    var i;
-    for (i = 0; i < recommendationsListDIV.children.length; i++) {
-        if (recommendationsListDIV.children[i].firstChild.innerHTML === subreddit) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/*function createRecommendationDIV(subreddit) {
-    var parentDIV = document.getElementById("recommendations");
-    var id = "recommendations-" + subreddit;
-
-    var entry = document.createElement("div");
-    entry.setAttribute("id", id);
-    entry.setAttribute("class", "recommendation");
-
-    var nameDIV = document.createElement("div");
-    nameDIV.innerHTML = subreddit;
-    nameDIV.style.display = "inline";
-    nameDIV.addEventListener('click', function() {
-        window.location.pathname = this.innerHTML;
-    });
-    entry.appendChild(nameDIV);
-
-    var deleteButton = document.createElement("button");
-    deleteButton.setAttribute("class", "deleteButton");
-    deleteButton.innerHTML = '&times;';
-    deleteButton.addEventListener('click', function() {
-        var entryToDelete = document.getElementById(this.parentElement.id);
-        utils.saveBlacklist(entryToDelete.children[0].innerHTML, function() {
-            refreshRecommendations(entryToDelete);
-        });
-    });
-    entry.appendChild(deleteButton);
-    parentDIV.appendChild(entry);
-}*/

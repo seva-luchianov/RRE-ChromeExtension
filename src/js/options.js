@@ -1,64 +1,5 @@
 const utils = require('./utils');
 
-function save_options() {
-    var maxRecommendations = parseInt(document.getElementById('recommendationLimit').value);
-    var status = document.getElementById('save-status');
-    if (isNaN(maxRecommendations)) {
-        status.textContent = 'Value must be integer';
-    } else {
-        if (maxRecommendations < 0) {
-            status.textContent = 'Value must be at least 1';
-        } else {
-            // At this point maxRecommendations is correct format, now gather data for tags and blacklist.
-            var tags = [];
-            var tagsDIV = document.getElementById('tags');
-
-            var i;
-            for (i = 0; i < tagsDIV.childElementCount; i++) {
-                tags.push(tagsDIV.children[i].children[0].innerHTML);
-            }
-
-            var blacklist = [];
-            var blacklistDIV = document.getElementById('blacklist');
-            for (i = 0; i < blacklistDIV.childElementCount; i++) {
-                blacklist.push(blacklistDIV.children[i].children[0].innerHTML);
-            }
-
-            console.log(tags);
-            console.log(blacklist);
-
-            saveData = {
-                RRERecommendationLimit: maxRecommendations,
-                RRETags: tags,
-                RREBlackList: blacklist
-            };
-
-            chrome.storage.sync.get([
-                'RRETags'
-            ], function(items) {
-                // If tags modified, clear chached recommendations
-                if (saveData.RRETags.length !== items.RRETags.length) {
-                    saveData.RRERecommendations = [];
-                } else {
-                    for (i = 0; i < saveData.RRETags.length; i++) {
-                        if (saveData.RRETags[i] !== items.RRETags[i]) {
-                            saveData.RRERecommendations = [];
-                            break;
-                        }
-                    }
-                }
-                chrome.storage.sync.set(saveData, function() {
-                    document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
-                    status.textContent = 'Values saved';
-                    setTimeout(function() {
-                        status.textContent = '';
-                    }, 1000);
-                });
-            });
-        }
-    }
-}
-
 function restore_options() {
     chrome.storage.sync.get([
         'RRERecommendationLimit',
@@ -100,46 +41,6 @@ function restore_options() {
         }
     });
 }
-
-/*function createListEntry(parentID, name, displayStatus) {
-    var parentDIV = document.getElementById(parentID);
-    var i;
-    for (i = 0; i < parentDIV.childElementCount; i++) {
-        var existingName = parentDIV.children[i].children[0].innerHTML;
-        if (existingName === name) {
-            if (displayStatus) {
-                var status = document.getElementById(parentID + "-status");
-                status.textContent = 'Entry already exists';
-                setTimeout(function() {
-                    status.textContent = '';
-                }, 1000);
-            }
-            return;
-        }
-    }
-
-    var id = parentID + "-" + name;
-
-    var entry = document.createElement("div");
-    entry.setAttribute("id", id);
-    entry.style.display = "block";
-
-    var nameDIV = document.createElement("div");
-    nameDIV.innerHTML = name;
-    nameDIV.style.display = "inline";
-    entry.appendChild(nameDIV);
-
-    var deleteButton = document.createElement("button");
-    deleteButton.setAttribute("class", "deleteButton");
-    deleteButton.innerHTML = '&times;';
-    // deleteButton.setAttribute("id", "delete-" + tagName);
-    deleteButton.addEventListener('click', function() {
-        var deleteThis = document.getElementById(this.parentElement.id);
-        deleteThis.parentNode.removeChild(deleteThis);
-    });
-    entry.appendChild(deleteButton);
-    parentDIV.appendChild(entry);
-}*/
 
 document.addEventListener('DOMContentLoaded', function() {
     var xhr = new XMLHttpRequest();
