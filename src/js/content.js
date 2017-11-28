@@ -82,13 +82,13 @@ function closeModalAndUpdateRecommendations() {
         'RREBlackList'
     ], function(items) {
         document.getElementById('optionswrapper').style.display = "none";
-        if (oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
+        if (!oldSettings.RRERecommendationLimit || oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
             refreshRecommendations(true);
             oldSettings = {};
             return;
         }
         // If blacklist modified, refresh recommendations
-        if (oldSettings.RREBlackList.length !== items.RREBlackList.length) {
+        if (!oldSettings.RREBlackList || oldSettings.RREBlackList.length !== items.RREBlackList.length) {
             refreshRecommendations(true);
             oldSettings = {};
             return;
@@ -148,7 +148,7 @@ function refreshRecommendations(deletedRecommendation) {
             chrome.storage.sync.get([
                 'RRERecommendations'
             ], function(items) {
-                if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + 10) {
+                if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
                     if (!loadingNewRecommendations) {
                         // not enough recommendations stored, need to query for more.
                         loadingNewRecommendations = true;
@@ -159,10 +159,10 @@ function refreshRecommendations(deletedRecommendation) {
                             tags: seedData.RRETags,
                             subscribed: [],
                             blacklisted: seedData.RREBlackList,
-                            maxRecommendations: 30
+                            maxRecommendations: utils.RRERecommendationsCacheSize
                         }));
                     } else {
-                        // we should still have enough recommendations, lets show them.
+                        // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
                         populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
                     }
                 } else {
@@ -182,9 +182,6 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
     ], function(items) {
         var recommendationsListDIV = document.getElementById("recommendations");
         if (items.RRERecommendations.length !== 0) {
-            var i = 0;
-            var encounteredBlacklist = 0;
-
             function deleteCallback(value) {
                 utils.saveBlacklist(value, function() {
                     refreshRecommendations(document.getElementById("recommendations-" + value));

@@ -107,6 +107,8 @@ document.getElementById("recommendationLimit").addEventListener("keyup", functio
         } else {
             if (maxRecommendations < 0) {
                 status.textContent = 'Value must be at least 1';
+            } else if (maxRecommendations > utils.RRERecommendationsCacheSize - utils.RRERecommendationsCacheBufferSize) {
+                status.textContent = 'Value cannot exceed ' + (utils.RRERecommendationsCacheSize - utils.RRERecommendationsCacheBufferSize);
             } else {
                 chrome.storage.sync.set({
                     RRERecommendationLimit: maxRecommendations
@@ -172,7 +174,8 @@ function saveTags(callback) {
     }
 
     chrome.storage.sync.set({
-        RRETags: tags
+        RRETags: tags,
+        RRERecommendations: [] // Changing the tags should reset the recommendations.
     }, callback);
 }
 

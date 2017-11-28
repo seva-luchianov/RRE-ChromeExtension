@@ -1,4 +1,6 @@
 module.exports = {
+    RRERecommendationsCacheSize: 30, // The max size of RRERecommendations.length
+    RRERecommendationsCacheBufferSize: 10, // The minimum result of RRERecommendations.length - RRERecommendationLimit
     saveBlacklist: function(subreddit, callback) {
         chrome.storage.sync.get([
             'RREBlackList',
