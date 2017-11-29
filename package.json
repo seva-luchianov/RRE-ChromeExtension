@@ -17,7 +17,7 @@
         "build": "mkdir -p ./build/prod && webpack --config ./webpack/webpack.config.prod.js",
         "start": "mkdir -p ./build/dev && webpack --config ./webpack/webpack.config.dev.js",
         "lint": "eslint src/js/",
-        "test": "mocha-webpack --require ./test/create-DOM.js --webpack-config ./webpack/webpack.config.test.js \"src/js/modules/*.spec.js\"",
+        "test": "nyc mocha-webpack --require ./test/create-DOM.js --webpack-config ./webpack/webpack.config.test.js \"src/js/modules/*.spec.js\"",
         "test:ci": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/**/*.spec.js\""
     },
     "dependencies": {
@@ -51,6 +51,7 @@
         "mocha-webpack": "0.7.0",
         "nyc": "^11.3.0",
         "sinon": "1.12.2",
+        "sinon-chrome": "^2.2.1",
         "supertest": "^3.0.0",
         "webpack": "2.2.1",
         "webpack-dev-server": "1.16.2",
