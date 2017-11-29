@@ -38,7 +38,8 @@ sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 document.getElementById('settings-button').addEventListener('click', function() {
     chrome.storage.sync.get([
         'RRERecommendationLimit',
-        'RREBlackList'
+        'RREBlackList',
+        'RRETags'
     ], function(items) {
         oldSettings = items;
         document.getElementById('optionswrapper').style.display = "block";
@@ -60,7 +61,8 @@ window.onclick = function(event) {
 function closeModalAndUpdateRecommendations() {
     chrome.storage.sync.get([
         'RRERecommendationLimit',
-        'RREBlackList'
+        'RREBlackList',
+        'RRETags'
     ], function(items) {
         document.getElementById('optionswrapper').style.display = "none";
         if (!oldSettings.RRERecommendationLimit || oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
@@ -82,6 +84,19 @@ function closeModalAndUpdateRecommendations() {
                 }
             }
         }
+        if (!oldSettings.RRETags || oldSettings.RRETags.length !== items.RRETags.length) {
+            refreshRecommendations(true);
+            oldSettings = {};
+            return;
+        } else {
+            for (i = 0; i < oldSettings.RRETags.length; i++) {
+                if (oldSettings.RRETags[i] !== items.RRETags[i]) {
+                    refreshRecommendations(true);
+                    oldSettings = {};
+                    return;
+                }
+            }
+        }
     });
 }
 
@@ -93,6 +108,10 @@ xhr.onload = function() {
             RRERecommendations: response
         }, function() {
             loadingNewRecommendations = false;
+            // Remove loading animation
+            var recommendationsListDIV = document.getElementById('recommendations');
+            var loadingDIV = document.getElementById("recommendations-loading");
+            recommendationsListDIV.removeChild(loadingDIV);
             populateRecommendations(response);
         });
     } else {
@@ -133,6 +152,13 @@ function refreshRecommendations(deletedRecommendation) {
                     if (!loadingNewRecommendations) {
                         // not enough recommendations stored, need to query for more.
                         loadingNewRecommendations = true;
+                        // Insert loading animation
+                        var recommendationsListDIV = document.getElementById('recommendations');
+                        var loadingDIV = document.createElement("img");
+                        loadingDIV.setAttribute("src", chrome.runtime.getURL('./img/loading.gif'));
+                        loadingDIV.setAttribute("id", "recommendations-loading");
+                        loadingDIV.style.maxHeight = "100px";
+                        recommendationsListDIV.insertBefore(loadingDIV, recommendationsListDIV.firstElementChild);
                         // we do have seed data, need to update recommendations
                         xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
                         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
