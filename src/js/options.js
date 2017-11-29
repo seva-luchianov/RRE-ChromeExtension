@@ -1,6 +1,41 @@
 const utils = require('./utils');
 
-function restore_options() {
+document.addEventListener('DOMContentLoaded', initializeOptions);
+
+window.addEventListener('message', function(event) {
+    if (event.srcElement.location.host === chrome.runtime.id) {
+        if (event.data.reason === "optionswrapper-closed") {
+            saveTags(false, function(newTags) {
+                window.parent.postMessage({
+                    reason: "optionswrapper-closed",
+                    data: newTags
+                }, '*');
+            });
+        } else if (event.data.reason === "optionswrapper-opened") {
+            initializeOptions();
+        }
+    }
+});
+
+function initializeOptions() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://localhost:8080/api/tags/');
+    xhr.onload = function() {
+        console.log(this.status);
+        if (this.status === 200) {
+            var tagsInput = document.getElementById('tagsInput');
+            var response = JSON.parse(this.response);
+            console.log("tags loaded");
+            var i;
+            for (i in response) {
+                var option = document.createElement("option");
+                option.text = response[i].name;
+                tagsInput.add(option);
+            }
+        }
+    };
+    console.log("loading tags");
+    xhr.send();
     chrome.storage.sync.get([
         'RRERecommendationLimit',
         'RRETags',
@@ -41,28 +76,6 @@ function restore_options() {
         }
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://localhost:8080/api/tags/');
-    xhr.onload = function() {
-        console.log(this.status);
-        if (this.status === 200) {
-            var tagsInput = document.getElementById('tagsInput');
-            var response = JSON.parse(this.response);
-            console.log("tags loaded");
-            var i;
-            for (i in response) {
-                var option = document.createElement("option");
-                option.text = response[i].name;
-                tagsInput.add(option);
-            }
-        }
-    };
-    console.log("loading tags");
-    xhr.send();
-    restore_options();
-});
 
 document.getElementById("first-time-setup-tags-range").addEventListener("change", function(event) {
     var maxDistance = this.value;
@@ -135,19 +148,6 @@ document.getElementById("tagsInput").addEventListener("change", function(event) 
         saveTags(true, function() {
             self.value = "";
         });
-    }
-});
-
-window.addEventListener('message', function(event) {
-    if (event.srcElement.location.host === chrome.runtime.id) {
-        if (event.data.reason === "optionswrapper-closed") {
-            saveTags(false, function(newTags) {
-                window.parent.postMessage({
-                    reason: "optionswrapper-closed",
-                    data: newTags
-                }, '*');
-            });
-        }
     }
 });
 

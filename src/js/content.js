@@ -39,6 +39,10 @@ var sideBarDiv = document.getElementsByClassName("side")[0];
 sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 
 document.getElementById('settings-button').addEventListener('click', function() {
+    var frame = document.getElementById('optionswrapper-frame');
+    frame.contentWindow.postMessage({
+        reason: "optionswrapper-opened"
+    }, '*');
     chrome.storage.sync.get([
         'RRERecommendationLimit',
         'RREBlackList',
@@ -117,7 +121,7 @@ function closeModalAndUpdateRecommendations(newTags) {
             return;
         } else {
             for (i = 0; i < oldSettings.RREBlackList.length; i++) {
-                if (oldSettings.RREBlackList[i] !== items.RREBlackList[i]) {
+                if (oldSettings.RREBlackList[i].subreddit !== items.RREBlackList[i].subreddit) {
                     refreshRecommendations(true, false);
                     oldSettings = {};
                     return;
@@ -125,11 +129,6 @@ function closeModalAndUpdateRecommendations(newTags) {
             }
         }
     });
-}
-
-var xhr = new XMLHttpRequest();
-xhr.onload = function() {
-    utils.xhr.processRecommendations(this, populateRecommendations);
 }
 
 refreshRecommendations(false, false);
@@ -161,7 +160,7 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         } else {
             // we have seed data, caller function requests update
             if (forceRefresh) {
-                utils.xhr.getRecommendations(xhr, seedData);
+                utils.xhr.loadRecommendations(seedData, populateRecommendations);
             } else {
                 // we have seed data, do we have recommendations?
                 chrome.storage.sync.get([
@@ -172,7 +171,7 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
                             // not enough recommendations stored, need to query for more.
                             loadingNewRecommendations = true;
                             // we do have seed data, need to update recommendations
-                            utils.xhr.getRecommendations(xhr, seedData);
+                            utils.xhr.loadRecommendations(seedData, populateRecommendations);
                         } else {
                             // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
                             populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
