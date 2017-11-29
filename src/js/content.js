@@ -1,32 +1,13 @@
 const utils = require('./utils');
 
-//---------------------------------------------------------------------------------------
-// Configure mock browser
-
-/*var AbstractBrowser = require('mock-browser').delegates.AbstractBrowser;
-var MockBrowser = require('mock-browser').mocks.MockBrowser;
-
-// configure in some factory
-var opts = {};
-
-if (typeof window === 'object') {
-    // assign the browser window if it exists
-    opts.window = window;
-} else {
-    // create a mock window object for testing
-    opts.window = MockBrowser.createWindow();
-}
-
-// create the browser object with a real window in brwosers and mock when not in browser
-var browser = new AbstractBrowser(opts);
-
-var window = browser.getWindow();
-var document = browser.getDocument();*/
-
-//---------------------------------------------------------------------------------------
-
-// Some Globals
+// Globals:
+// Used to prevent multiple identical requests to server if user triggers suggestion refresh.
+// Set to true before send and set to false inside the onload.
 var loadingNewRecommendations = false;
+
+// Used to trigger dynamic refresh if settings are modified.
+// Set to current state of settings before when settings wondow opened and compared with settings after settings window is closed.
+var oldSettings = {};
 
 // Setup the container
 var RREContainer = document.createElement("div");
@@ -42,8 +23,10 @@ RREContainer.innerHTML =
         </lu>
         <div id="optionswrapper" class="optionswrapper">
             <div class="optionswrapper-content">
+                <div class="title">RRE Settings</div>
                 <span id="close-optionswrapper" class="close">&times;</span>
-                <object style="height: inherit; width: inherit;" type="text/html" data="${optionshtml}"></object>
+                <iframe src="${optionshtml}" align="left" class="optionswrapper-frame">
+                </iframe>
             </div>
         </div>
     </div>`;
@@ -51,8 +34,6 @@ RREContainer.innerHTML =
 // Inject into reddit sidebar
 var sideBarDiv = document.getElementsByClassName("side")[0];
 sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
-
-var oldSettings = {};
 
 document.getElementById('settings-button').addEventListener('click', function() {
     chrome.storage.sync.get([
@@ -182,17 +163,19 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
     ], function(items) {
         var recommendationsListDIV = document.getElementById("recommendations");
         if (items.RRERecommendations.length !== 0) {
-            function deleteCallback(value) {
-                utils.saveBlacklist(value, function() {
-                    refreshRecommendations(document.getElementById("recommendations-" + value));
+            function deleteCallback(subreddit) {
+                utils.saveBlacklist(subreddit, function() {
+                    refreshRecommendations(document.getElementById("recommendations-" + subreddit));
                 });
             }
 
+            var i = 0;
             while (recommendationsListDIV.children.length < items.RRERecommendationLimit) {
-                if (items.RREBlackList.indexOf(items.RRERecommendations[i].subreddit) === -1) {
-                    var value = items.RRERecommendations[i].subreddit;
-                    utils.createListEntryDIV("recommendations", value, false, deleteCallback);
+                var subreddit = items.RRERecommendations[i].subreddit;
+                if (items.RREBlackList.indexOf(subreddit) === -1) {
+                    utils.createListEntryDIV("recommendations", subreddit, false, deleteCallback);
                 }
+                i++;
             }
         } else {
             recommendationsListDIV.appendChild(document.createTextNode("No More Recommendations :("));
