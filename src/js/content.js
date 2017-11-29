@@ -160,24 +160,22 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         } else {
             // we have seed data, caller function requests update
             if (forceRefresh) {
-                utils.xhr.loadRecommendations(seedData, populateRecommendations);
+                utils.xhr.loadRecommendations(seedData, true, populateRecommendations);
             } else {
                 // we have seed data, do we have recommendations?
                 chrome.storage.sync.get([
                     'RRERecommendations'
                 ], function(items) {
-                    if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
-                        if (!loadingNewRecommendations) {
-                            // not enough recommendations stored, need to query for more.
-                            loadingNewRecommendations = true;
-                            // we do have seed data, need to update recommendations
-                            utils.xhr.loadRecommendations(seedData, populateRecommendations);
-                        } else {
-                            // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
-                            populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
-                        }
+                    // There are no recommendations stored at all
+                    if (!items.RRERecommendations) {
+                        utils.xhr.loadRecommendations(seedData, populateRecommendations);
                     } else {
-                        // we have recommendations, lets show them.
+                        // recommendations exist, do we need to query for more?
+                        if (items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
+                            // we do have seed data, need to update recommendations
+                            utils.xhr.loadRecommendations(seedData, false, populateRecommendations);
+                        }
+                        // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
                         populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
                     }
                 });
@@ -193,6 +191,7 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
         'RREBlackList'
     ], function(items) {
         var recommendationsListDIV = document.getElementById("recommendations");
+        var appendMessage = false;
         if (items.RRERecommendations.length !== 0) {
             function deleteCallback(subreddit) {
                 utils.saveBlacklist(subreddit, function() {
@@ -200,16 +199,37 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
                 });
             }
 
+            var limit = items.RRERecommendationLimit;
+            if (utils.getListEntryMessage("recommendations")) {
+                limit++;
+            }
+
             var i = 0;
-            while (recommendationsListDIV.children.length < items.RRERecommendationLimit) {
+            while (recommendationsListDIV.children.length < limit) {
                 var subreddit = items.RRERecommendations[i].subreddit;
                 if (items.RREBlackList.indexOf(subreddit) === -1) {
-                    utils.createListEntryDIV("recommendations", subreddit, false, deleteCallback);
+                    utils.createListEntry("recommendations", subreddit, false, deleteCallback);
                 }
                 i++;
+                if (i >= items.RRERecommendations.length) {
+                    // we dont have enough recommendations to display, exit the loop.
+                    appendMessage = true;
+                    break;
+                }
             }
         } else {
-            recommendationsListDIV.appendChild(document.createTextNode("No More Recommendations :("));
+            appendMessage = true;
+        }
+
+        if (appendMessage) {
+            if (utils.xhr.loadingNewRecommendations) {
+                utils.setListEntryMessage("recommendations", "Loading New Recommendations...");
+            } else {
+                utils.setListEntryMessage("recommendations", "No More Recommendations :(");
+            }
+        } else {
+            // remove message if exists
+            utils.setListEntryMessage("recommendations", "");
         }
     });
 }

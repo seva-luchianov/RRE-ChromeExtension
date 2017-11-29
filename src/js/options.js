@@ -17,25 +17,9 @@ window.addEventListener('message', function(event) {
     }
 });
 
+// Asynchronously refresh tags dropdown and existing list items based on potentially updated server data and storage data respectively
 function initializeOptions() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://localhost:8080/api/tags/');
-    xhr.onload = function() {
-        console.log(this.status);
-        if (this.status === 200) {
-            var tagsInput = document.getElementById('tagsInput');
-            var response = JSON.parse(this.response);
-            console.log("tags loaded");
-            var i;
-            for (i in response) {
-                var option = document.createElement("option");
-                option.text = response[i].name;
-                tagsInput.add(option);
-            }
-        }
-    };
-    console.log("loading tags");
-    xhr.send();
+    utils.xhr.loadTags();
     chrome.storage.sync.get([
         'RRERecommendationLimit',
         'RRETags',
@@ -58,7 +42,7 @@ function initializeOptions() {
         var i;
         for (i in items.RREBlackList) {
             var subreddit = items.RREBlackList[i].subreddit;
-            utils.createListEntryDIV('blacklist', subreddit, false, deleteBlacklistCallback);
+            utils.createListEntry('blacklist', subreddit, false, deleteBlacklistCallback);
         }
 
         if (!items.RRETags) {
@@ -71,7 +55,7 @@ function initializeOptions() {
             }
             for (i in items.RRETags) {
                 var tag = items.RRETags[i];
-                utils.createListEntryDIV('tags', tag, false, deleteTagCallback);
+                utils.createListEntry('tags', tag, false, deleteTagCallback);
             }
         }
     });
@@ -79,36 +63,7 @@ function initializeOptions() {
 
 document.getElementById("first-time-setup-tags-range").addEventListener("change", function(event) {
     var maxDistance = this.value;
-    console.log(maxDistance);
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://localhost:8080/api/subreddits/getTagsForSubreddits');
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.onload = function() {
-        var response = JSON.parse(this.response);
-        var totalTags = Object.keys(response).length;
-        var tagListDIV = document.getElementById('tags');
-        // clear list if it has more tags than give (this can be optimized)
-        // we dont have to clear list if it has less tags because createListEntry prevents duplicates
-        if (tagListDIV.childElementCount > totalTags) {
-            while (!!tagListDIV.firstChild) {
-                tagListDIV.removeChild(tagListDIV.firstChild);
-            }
-        }
-
-        function deleteCallback(tag) {
-            tagListDIV.removeChild(document.getElementById("tags-" + tag));
-        }
-        var tag;
-        for (tag in response) {
-            utils.createListEntryDIV('tags', tag, false, deleteCallback);
-        }
-    }
-    xhr.send(JSON.stringify({
-        subreddits: [
-            "/r/news/"
-        ],
-        maxDistance: maxDistance
-    }));
+    utils.xhr.getTagsForSubscriptions(["/r/news/"], maxDistance);
 });
 
 document.getElementById("recommendationLimit").addEventListener("keyup", function(event) {
@@ -140,7 +95,7 @@ document.getElementById("recommendationLimit").addEventListener("keyup", functio
 document.getElementById("tagsInput").addEventListener("change", function(event) {
     var self = this;
     var tag = self.value;
-    var added = utils.createListEntryDIV('tags', tag, true, function() {
+    var added = utils.createListEntry('tags', tag, true, function() {
         document.getElementById('tags').removeChild(document.getElementById("tags-" + tag));
     });
 
@@ -226,7 +181,7 @@ document.getElementById("blacklistInput").addEventListener("keyup", function(eve
             }, 1000);
         } else {
             subreddit = "/r/" + subreddit + "/";
-            utils.createListEntryDIV('blacklist', subreddit, true, function() {
+            utils.createListEntry('blacklist', subreddit, true, function() {
                 utils.saveBlacklist(subreddit, undefined);
             });
             utils.saveBlacklist(subreddit, function() {
