@@ -132,15 +132,28 @@ document.getElementById("tagsInput").addEventListener("change", function(event) 
     });
 
     if (added) {
-        saveTags(function() {
+        saveTags(true, function() {
             self.value = "";
         });
     }
 });
 
+window.addEventListener('message', function(event) {
+    if (event.srcElement.location.host === chrome.runtime.id) {
+        if (event.data.reason === "optionswrapper-closed") {
+            saveTags(false, function(newTags) {
+                window.parent.postMessage({
+                    reason: "optionswrapper-closed",
+                    data: newTags
+                }, '*');
+            });
+        }
+    }
+});
+
 document.getElementById("first-time-setup-done").addEventListener("click", function(event) {
     document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
-    saveTags(function() {
+    saveTags(true, function() {
         chrome.storage.sync.get([
             'RRERecommendationLimit',
             'RREBlackList'
@@ -164,7 +177,7 @@ document.getElementById("first-time-setup-done").addEventListener("click", funct
     });
 });
 
-function saveTags(callback) {
+function saveTags(clearRecommendations, callback) {
     var tags = [];
     var tagsDIV = document.getElementById('tags');
 
@@ -173,10 +186,17 @@ function saveTags(callback) {
         tags.push(tagsDIV.children[i].children[0].innerHTML);
     }
 
-    chrome.storage.sync.set({
-        RRETags: tags,
-        RRERecommendations: [] // Changing the tags should reset the recommendations.
-    }, callback);
+    var saveData = {
+        RRETags: tags
+    };
+
+    if (clearRecommendations) {
+        saveData.RRERecommendations = [];
+    }
+
+    chrome.storage.sync.set(saveData, function() {
+        callback(tags);
+    });
 }
 
 document.getElementById("blacklistInput").addEventListener("keyup", function(event) {

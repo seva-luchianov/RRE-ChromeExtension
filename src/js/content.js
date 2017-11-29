@@ -9,6 +9,9 @@ var loadingNewRecommendations = false;
 // Set to current state of settings before when settings wondow opened and compared with settings after settings window is closed.
 var oldSettings = {};
 
+// Used to ensure the settings modal will close even if a message isnt recieved after a timeout period.
+var closeModalTimeout;
+
 // Setup the container
 var RREContainer = document.createElement("div");
 RREContainer.setAttribute('class', 'spacer');
@@ -25,7 +28,7 @@ RREContainer.innerHTML =
             <div class="optionswrapper-content">
                 <div class="title">RRE Settings</div>
                 <span id="close-optionswrapper" class="close">&times;</span>
-                <iframe src="${optionshtml}" align="left" class="optionswrapper-frame">
+                <iframe id="optionswrapper-frame" class="optionswrapper-frame" align="left" src="${optionshtml}">
                 </iframe>
             </div>
         </div>
@@ -48,50 +51,74 @@ document.getElementById('settings-button').addEventListener('click', function() 
 
 // When the user clicks on <span> (x), close the modal
 document.getElementById("close-optionswrapper").onclick = function() {
-    closeModalAndUpdateRecommendations();
+    var frame = document.getElementById('optionswrapper-frame');
+    frame.contentWindow.postMessage({
+        reason: "optionswrapper-closed"
+    }, '*');
+    closeModalTimeout = setTimeout(function() {
+        closeModalAndUpdateRecommendations();
+    }, 1000);
 }
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
     if (event.target == document.getElementById("optionswrapper")) {
-        closeModalAndUpdateRecommendations();
+        var frame = document.getElementById('optionswrapper-frame');
+        frame.contentWindow.postMessage({
+            reason: "optionswrapper-closed"
+        }, '*');
+        closeModalTimeout = setTimeout(function() {
+            closeModalAndUpdateRecommendations();
+        }, 1000);
     }
 }
 
-function closeModalAndUpdateRecommendations() {
-    chrome.storage.sync.get([
-        'RRERecommendationLimit',
-        'RREBlackList',
-        'RRETags'
-    ], function(items) {
-        document.getElementById('optionswrapper').style.display = "none";
-        if (!oldSettings.RRERecommendationLimit || oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
-            refreshRecommendations(true);
-            oldSettings = {};
-            return;
+window.addEventListener('message', function(event) {
+    if (chrome.runtime.getURL("/").indexOf(event.origin) !== -1) {
+        if (event.data.reason === "optionswrapper-closed") {
+            // Stop the backup modal close funtion since we received a message to close it.
+            clearTimeout(closeModalTimeout);
+            // Immediately close the modal.
+            closeModalAndUpdateRecommendations(event.data.data);
         }
-        // If blacklist modified, refresh recommendations
-        if (!oldSettings.RREBlackList || oldSettings.RREBlackList.length !== items.RREBlackList.length) {
-            refreshRecommendations(true);
+    }
+});
+
+function closeModalAndUpdateRecommendations(newTags) {
+    document.getElementById('optionswrapper').style.display = "none";
+    if (newTags) {
+        if (!oldSettings.RRETags || oldSettings.RRETags.length !== newTags.length) {
+            refreshRecommendations(true, true);
             oldSettings = {};
             return;
         } else {
-            for (i = 0; i < oldSettings.RREBlackList.length; i++) {
-                if (oldSettings.RREBlackList[i] !== items.RREBlackList[i]) {
-                    refreshRecommendations(true);
+            for (i = 0; i < oldSettings.RRETags.length; i++) {
+                if (oldSettings.RRETags[i] !== newTags[i]) {
+                    refreshRecommendations(true, true);
                     oldSettings = {};
                     return;
                 }
             }
         }
-        if (!oldSettings.RRETags || oldSettings.RRETags.length !== items.RRETags.length) {
-            refreshRecommendations(true);
+    }
+    chrome.storage.sync.get([
+        'RRERecommendationLimit',
+        'RREBlackList',
+    ], function(items) {
+        if (!oldSettings.RRERecommendationLimit || oldSettings.RRERecommendationLimit !== items.RRERecommendationLimit) {
+            refreshRecommendations(true, false);
+            oldSettings = {};
+            return;
+        }
+        // If blacklist modified, refresh recommendations
+        if (!oldSettings.RREBlackList || oldSettings.RREBlackList.length !== items.RREBlackList.length) {
+            refreshRecommendations(true, false);
             oldSettings = {};
             return;
         } else {
-            for (i = 0; i < oldSettings.RRETags.length; i++) {
-                if (oldSettings.RRETags[i] !== items.RRETags[i]) {
-                    refreshRecommendations(true);
+            for (i = 0; i < oldSettings.RREBlackList.length; i++) {
+                if (oldSettings.RREBlackList[i] !== items.RREBlackList[i]) {
+                    refreshRecommendations(true, false);
                     oldSettings = {};
                     return;
                 }
@@ -102,31 +129,19 @@ function closeModalAndUpdateRecommendations() {
 
 var xhr = new XMLHttpRequest();
 xhr.onload = function() {
-    if (this.status === 200) {
-        var response = JSON.parse(this.response);
-        chrome.storage.sync.set({
-            RRERecommendations: response
-        }, function() {
-            loadingNewRecommendations = false;
-            // Remove loading animation
-            var recommendationsListDIV = document.getElementById('recommendations');
-            var loadingDIV = document.getElementById("recommendations-loading");
-            recommendationsListDIV.removeChild(loadingDIV);
-            populateRecommendations(response);
-        });
-    } else {
-        alert("RRE Server Error: " + this.status);
-    }
-};
+    utils.xhr.processRecommendations(this, populateRecommendations);
+}
 
-refreshRecommendations();
+refreshRecommendations(false, false);
 
-function refreshRecommendations(deletedRecommendation) {
+function refreshRecommendations(deletedRecommendation, forceRefresh) {
     if (deletedRecommendation) {
         var recommendationsListDIV = document.getElementById('recommendations');
         if (typeof deletedRecommendation === 'boolean') {
-            while (!!recommendationsListDIV.firstElementChild) {
-                recommendationsListDIV.removeChild(recommendationsListDIV.firstElementChild);
+            if (deletedRecommendation) {
+                while (!!recommendationsListDIV.firstElementChild) {
+                    recommendationsListDIV.removeChild(recommendationsListDIV.firstElementChild);
+                }
             }
         } else {
             recommendationsListDIV.removeChild(deletedRecommendation);
@@ -144,39 +159,30 @@ function refreshRecommendations(deletedRecommendation) {
             console.log("First Time Setup Triggered");
             document.getElementById('optionswrapper').style.display = "block";
         } else {
-            // we have seed data, do we have recommendations?
-            chrome.storage.sync.get([
-                'RRERecommendations'
-            ], function(items) {
-                if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
-                    if (!loadingNewRecommendations) {
-                        // not enough recommendations stored, need to query for more.
-                        loadingNewRecommendations = true;
-                        // Insert loading animation
-                        var recommendationsListDIV = document.getElementById('recommendations');
-                        var loadingDIV = document.createElement("img");
-                        loadingDIV.setAttribute("src", chrome.runtime.getURL('./img/loading.gif'));
-                        loadingDIV.setAttribute("id", "recommendations-loading");
-                        loadingDIV.style.maxHeight = "100px";
-                        recommendationsListDIV.insertBefore(loadingDIV, recommendationsListDIV.firstElementChild);
-                        // we do have seed data, need to update recommendations
-                        xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
-                        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                        xhr.send(JSON.stringify({
-                            tags: seedData.RRETags,
-                            subscribed: [],
-                            blacklisted: seedData.RREBlackList,
-                            maxRecommendations: utils.RRERecommendationsCacheSize
-                        }));
+            // we have seed data, caller function requests update
+            if (forceRefresh) {
+                utils.xhr.getRecommendations(xhr, seedData);
+            } else {
+                // we have seed data, do we have recommendations?
+                chrome.storage.sync.get([
+                    'RRERecommendations'
+                ], function(items) {
+                    if (!items.RRERecommendations || items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
+                        if (!loadingNewRecommendations) {
+                            // not enough recommendations stored, need to query for more.
+                            loadingNewRecommendations = true;
+                            // we do have seed data, need to update recommendations
+                            utils.xhr.getRecommendations(xhr, seedData);
+                        } else {
+                            // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
+                            populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
+                        }
                     } else {
-                        // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
+                        // we have recommendations, lets show them.
                         populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
                     }
-                } else {
-                    // we have recommendations, lets show them.
-                    populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
-                }
-            });
+                });
+            }
         }
     });
 }
@@ -191,7 +197,7 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
         if (items.RRERecommendations.length !== 0) {
             function deleteCallback(subreddit) {
                 utils.saveBlacklist(subreddit, function() {
-                    refreshRecommendations(document.getElementById("recommendations-" + subreddit));
+                    refreshRecommendations(document.getElementById("recommendations-" + subreddit), false);
                 });
             }
 
