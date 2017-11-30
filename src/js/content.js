@@ -1,6 +1,7 @@
+// ---------- Globals ---------- //
+
 const utils = require('./utils');
 
-// Globals:
 // Used to prevent multiple identical requests to server if user triggers suggestion refresh.
 // Set to true before send and set to false inside the onload.
 var loadingNewRecommendations = false;
@@ -11,6 +12,11 @@ var oldSettings = {};
 
 // Used to ensure the settings modal will close even if a message isnt recieved after a timeout period.
 var closeModalTimeout;
+
+// Sent with xhr recommendation requests
+var subscribedSubreddits = [];
+
+// ---------- Page Load Execution ---------- //
 
 // Setup the container
 var RREContainer = document.createElement("div");
@@ -38,6 +44,11 @@ RREContainer.innerHTML =
 var sideBarDiv = document.getElementsByClassName("side")[0];
 sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 
+// First time initialization of recommendations on page load
+refreshRecommendations(false, false);
+
+// ---------- Event Listeners ---------- //
+
 document.getElementById('settings-button').addEventListener('click', function() {
     var frame = document.getElementById('optionswrapper-frame');
     frame.contentWindow.postMessage({
@@ -61,7 +72,7 @@ document.getElementById("close-optionswrapper").onclick = function() {
     }, '*');
     closeModalTimeout = setTimeout(function() {
         closeModalAndUpdateRecommendations();
-    }, 1000);
+    }, utils.closeModalTimeoutValue);
 }
 
 // When the user clicks anywhere outside of the modal, close it
@@ -73,7 +84,7 @@ window.onclick = function(event) {
         }, '*');
         closeModalTimeout = setTimeout(function() {
             closeModalAndUpdateRecommendations();
-        }, 1000);
+        }, utils.closeModalTimeoutValue);
     }
 }
 
@@ -87,6 +98,8 @@ window.addEventListener('message', function(event) {
         }
     }
 });
+
+// ---------- Private Functions ---------- //
 
 function closeModalAndUpdateRecommendations(newTags) {
     document.getElementById('optionswrapper').style.display = "none";
@@ -131,8 +144,6 @@ function closeModalAndUpdateRecommendations(newTags) {
     });
 }
 
-refreshRecommendations(false, false);
-
 function refreshRecommendations(deletedRecommendation, forceRefresh) {
     if (deletedRecommendation) {
         var recommendationsListDIV = document.getElementById('recommendations');
@@ -156,11 +167,20 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
             // No seed data, first time setup.
             console.log("First Time Setup Triggered");
-            document.getElementById('optionswrapper').style.display = "block";
+            // Extract user subscriptions from reddit DOM
+            utils.initializeSubscribedSubreddits(false, function(extractedSubreddits) {
+                subscribedSubreddits = extractedSubreddits;
+                var frame = document.getElementById('optionswrapper-frame');
+                frame.contentWindow.postMessage({
+                    reason: "optionswrapper-opened",
+                    data: subscribedSubreddits
+                }, '*');
+                document.getElementById('optionswrapper').style.display = "block";
+            });
         } else {
             // we have seed data, caller function requests update
             if (forceRefresh) {
-                utils.xhr.loadRecommendations(seedData, true, populateRecommendations);
+                utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, populateRecommendations);
             } else {
                 // we have seed data, do we have recommendations?
                 chrome.storage.sync.get([
@@ -168,12 +188,12 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
                 ], function(items) {
                     // There are no recommendations stored at all
                     if (!items.RRERecommendations) {
-                        utils.xhr.loadRecommendations(seedData, populateRecommendations);
+                        utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, populateRecommendations);
                     } else {
                         // recommendations exist, do we need to query for more?
                         if (items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
                             // we do have seed data, need to update recommendations
-                            utils.xhr.loadRecommendations(seedData, false, populateRecommendations);
+                            utils.xhr.loadRecommendations(seedData, subscribedSubreddits, false, populateRecommendations);
                         }
                         // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
                         populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);

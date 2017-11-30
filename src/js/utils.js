@@ -139,7 +139,56 @@ function getListEntryMessage(parentID) {
     }
 }
 
-function loadRecommendations(seedData, showLoadingDIV, callback) {
+function initializeSubscribedSubreddits(calledFromFallback, callback) {
+    if (calledFromFallback) {
+        var srListContainer = document.getElementById("srDropdownContainer");
+        if (srListContainer) {
+            srListContainer.onclick = null;
+            srListContainer.click();
+        }
+    }
+    var subscribedSubreddits = [];
+    var srList = document.getElementsByClassName("sr-list");
+    var resLayout = false;
+    if (srList.length !== 0) {
+        // Standard Reddit Layout
+        srList = srList[0].lastElementChild;
+    } else {
+        // RES Layout
+        resLayout = true;
+        srList = document.getElementById("srList").lastElementChild;
+        if (!srList && !calledFromFallback) {
+            // Fallback if subreddit table hasn't loaded yet
+            var srListContainer = document.getElementById("srDropdownContainer");
+            srListContainer.onclick = function() {
+                setTimeout(function() {
+                    initializeSubscribedSubreddits(true, callback);
+                }, 250);
+            }
+            srListContainer.click();
+            return;
+        }
+    }
+    if (srList) {
+        for (var i = 0; i < srList.childElementCount; i++) {
+            subscribedSubreddits.push(extractSubscribedSubreddit(srList.children[i], resLayout));
+        }
+    }
+    callback(subscribedSubreddits);
+}
+
+function extractSubscribedSubreddit(subredditDIV, resLayout) {
+    var subredditName;
+    if (resLayout) {
+        subredditName = subredditDIV.firstElementChild.lastElementChild.innerText;
+    } else {
+        subredditName = subredditDIV.lastElementChild.innerText;
+    }
+    subredditName = "/r/" + subredditName + "/";
+    return subredditName.toLowerCase();
+}
+
+function loadRecommendations(seedData, subscribedSubreddits, showLoadingDIV, callback) {
     var self = this;
     if (!self.loadingNewRecommendations) {
         self.loadingNewRecommendations = true;
@@ -178,7 +227,7 @@ function loadRecommendations(seedData, showLoadingDIV, callback) {
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.send(JSON.stringify({
             tags: seedData.RRETags,
-            subscribed: [],
+            subscribed: subscribedSubreddits,
             blacklisted: seedData.RREBlackList,
             maxRecommendations: module.exports.RRERecommendationsCacheSize
         }));
@@ -236,10 +285,12 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
 module.exports = {
     RRERecommendationsCacheSize: 30, // The max size of RRERecommendations.length
     RRERecommendationsCacheBufferSize: 10, // The minimum result of RRERecommendations.length - RRERecommendationLimit
+    closeModalTimeoutValue: 1000, // The time in milliseconds before the timeout to close the options modal is triggered if the close message is not recieved
     saveBlacklist: saveBlacklist,
     createListEntry: createListEntry,
     setListEntryMessage: setListEntryMessage,
     getListEntryMessage: getListEntryMessage,
+    initializeSubscribedSubreddits: initializeSubscribedSubreddits,
     xhr: {
         loadingNewRecommendations: false,
         loadRecommendations: loadRecommendations,
