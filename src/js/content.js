@@ -166,13 +166,12 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         // Do we have seed data?
         if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
             // No seed data, first time setup.
-            console.log("First Time Setup Triggered");
             // Extract user subscriptions from reddit DOM
             utils.initializeSubscribedSubreddits(false, function(extractedSubreddits) {
                 subscribedSubreddits = extractedSubreddits;
                 var frame = document.getElementById('optionswrapper-frame');
                 frame.contentWindow.postMessage({
-                    reason: "optionswrapper-opened",
+                    reason: "optionswrapper-opened-first",
                     data: subscribedSubreddits
                 }, '*');
                 document.getElementById('optionswrapper').style.display = "block";

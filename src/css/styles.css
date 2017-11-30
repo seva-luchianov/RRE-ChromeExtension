@@ -44,12 +44,8 @@
     display: inline;
 }
 
-.slider {
+.firstTimeSetupSlider {
     display: none;
-}
-
-.sliderVisible {
-    display: inline;
 }
 
 .optionswrapper {

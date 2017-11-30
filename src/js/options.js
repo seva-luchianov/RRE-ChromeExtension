@@ -11,14 +11,17 @@ window.addEventListener('message', function(event) {
     if (event.srcElement.location.host === chrome.runtime.id) {
         if (event.data.reason === "optionswrapper-closed") {
             saveTags(false, function(newTags) {
+                document.getElementById('first-time-setup-tags').style.display = "";
                 window.parent.postMessage({
                     reason: "optionswrapper-closed",
                     data: newTags
                 }, '*');
             });
-        } else if (event.data.reason === "optionswrapper-opened") {
+        } else if (event.data.reason === "optionswrapper-opened-first") {
             subscribedSubreddits = event.data.data;
-            initializeOptions();
+            initializeOptions(true);
+        } else if (event.data.reason === "optionswrapper-opened") {
+            initializeOptions(false);
         }
     }
 });
@@ -68,32 +71,6 @@ document.getElementById("tagsInput").addEventListener("change", function(event) 
     }
 });
 
-document.getElementById("first-time-setup-done").addEventListener("click", function(event) {
-    document.getElementById('first-time-setup-tags').setAttribute("class", "slider");
-    saveTags(true, function() {
-        chrome.storage.sync.get([
-            'RRERecommendationLimit',
-            'RREBlackList'
-        ], function(items) {
-            var update = false;
-            if (!items.RRERecommendationLimit) {
-                items.RRERecommendationLimit = 5;
-                update = true;
-            }
-            if (!items.RREBlackList) {
-                items.RREBlackList = [];
-                update = true;
-            }
-            if (update) {
-                chrome.storage.sync.set({
-                    RRERecommendationLimit: items.RRERecommendationLimit,
-                    RREBlackList: items.RREBlackList
-                });
-            }
-        });
-    });
-});
-
 document.getElementById("blacklistInput").addEventListener("keyup", function(event) {
     if (event.keyCode === 13) {
         var blacklistInput = this;
@@ -134,7 +111,7 @@ document.getElementById("blacklistInput").addEventListener("keyup", function(eve
 // ---------- Private Functions ---------- //
 
 // Asynchronously refresh tags dropdown and existing list items based on potentially updated server data and storage data respectively
-function initializeOptions() {
+function initializeOptions(firstTimeSetup) {
     utils.xhr.loadTags();
     chrome.storage.sync.get([
         'RRERecommendationLimit',
@@ -161,10 +138,12 @@ function initializeOptions() {
             utils.createListEntry('blacklist', subreddit, false, deleteBlacklistCallback);
         }
 
-        if (!items.RRETags) {
-            // No Tag data, use First Time Setup logic
-            document.getElementById('first-time-setup-tags').setAttribute("class", "sliderVisible");
-            console.log("Range Bar Visible");
+        if (firstTimeSetup) {
+            document.getElementById('first-time-setup-tags').style.display = "block";
+            chrome.storage.sync.set({
+                RRERecommendationLimit: items.RRERecommendationLimit,
+                RREBlackList: items.RREBlackList
+            });
         } else {
             function deleteTagCallback(tag) {
                 document.getElementById('tags').removeChild(document.getElementById("tags-" + tag));
