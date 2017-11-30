@@ -72,7 +72,7 @@ document.getElementById("close-optionswrapper").onclick = function() {
     }, '*');
     closeModalTimeout = setTimeout(function() {
         closeModalAndUpdateRecommendations();
-    }, utils.closeModalTimeoutValue);
+    }, utils.closeModalTimeoutDuration);
 }
 
 // When the user clicks anywhere outside of the modal, close it
@@ -84,7 +84,7 @@ window.onclick = function(event) {
         }, '*');
         closeModalTimeout = setTimeout(function() {
             closeModalAndUpdateRecommendations();
-        }, utils.closeModalTimeoutValue);
+        }, utils.closeModalTimeoutDuration);
     }
 }
 

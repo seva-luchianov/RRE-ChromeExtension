@@ -47,7 +47,7 @@ document.getElementById("recommendationLimit").addEventListener("keyup", functio
                     status.textContent = 'Values saved';
                     setTimeout(function() {
                         status.textContent = '';
-                    }, 1000);
+                    }, utils.displayStatusMessageDurationValue);
                 });
             }
         }
@@ -118,7 +118,7 @@ document.getElementById("blacklistInput").addEventListener("keyup", function(eve
             status.textContent = 'Input cannot be interpreted as subreddit';
             setTimeout(function() {
                 status.textContent = '';
-            }, 1000);
+            }, utils.displayStatusMessageDurationValue);
         } else {
             subreddit = "/r/" + subreddit + "/";
             utils.createListEntry('blacklist', subreddit, true, function() {

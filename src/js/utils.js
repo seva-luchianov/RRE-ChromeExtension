@@ -140,10 +140,16 @@ function getListEntryMessage(parentID) {
 }
 
 function initializeSubscribedSubreddits(calledFromFallback, callback) {
+    function srListListener(event) {
+        if (event.target.parentElement.id === "srList" && event.target.nodeName === "TBODY") {
+            initializeSubscribedSubreddits(true, callback);
+        }
+    }
+
     if (calledFromFallback) {
         var srListContainer = document.getElementById("srDropdownContainer");
         if (srListContainer) {
-            srListContainer.onclick = null;
+            document.removeEventListener("DOMNodeInserted", srListListener);
             srListContainer.click();
         }
     }
@@ -160,11 +166,7 @@ function initializeSubscribedSubreddits(calledFromFallback, callback) {
         if (!srList && !calledFromFallback) {
             // Fallback if subreddit table hasn't loaded yet
             var srListContainer = document.getElementById("srDropdownContainer");
-            srListContainer.onclick = function() {
-                setTimeout(function() {
-                    initializeSubscribedSubreddits(true, callback);
-                }, 250);
-            }
+            document.addEventListener("DOMNodeInserted", srListListener);
             srListContainer.click();
             return;
         }
@@ -285,7 +287,8 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
 module.exports = {
     RRERecommendationsCacheSize: 30, // The max size of RRERecommendations.length
     RRERecommendationsCacheBufferSize: 10, // The minimum result of RRERecommendations.length - RRERecommendationLimit
-    closeModalTimeoutValue: 1000, // The time in milliseconds before the timeout to close the options modal is triggered if the close message is not recieved
+    closeModalTimeoutDuration: 1000, // The time in milliseconds before the timeout to close the options modal is triggered if the close message is not recieved
+    displayStatusMessageDuration: 1000, // The amount of time in milliseconds to display a status message before hiding it
     saveBlacklist: saveBlacklist,
     createListEntry: createListEntry,
     setListEntryMessage: setListEntryMessage,
