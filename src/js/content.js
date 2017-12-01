@@ -240,9 +240,11 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
                                     chrome.runtime.getURL('./img/loading-entry.gif')
                                 );
                             });
+                        } else {
+                            clearRecommendations(clearAll, deletedRecommendation);
+                            // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
+                            populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
                         }
-                        // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
-                        populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
                     }
                 });
             }
