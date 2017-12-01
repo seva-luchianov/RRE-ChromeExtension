@@ -1,6 +1,6 @@
 {
-    "RRERecommendationsCacheSize": 20,
-    "RRERecommendationsCacheBufferSize": 1,
+    "RRERecommendationsCacheSize": 100,
+    "RRERecommendationsCacheBufferSize": 10,
     "closeModalTimeoutDuration": 1000,
     "displayStatusMessageDuration": 1000,
     "RREServerURL": "https://localhost:8080"

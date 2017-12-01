@@ -18,11 +18,14 @@
 }
 
 .entry-message {
-
+    height:25px;
+    font-size: 15px;
 }
 
 .entry-message-recommendation {
-    
+    border-left-width: 1px;
+    padding-left: 8px;
+    border-left-style: solid;
 }
 
 .deleteButton {
