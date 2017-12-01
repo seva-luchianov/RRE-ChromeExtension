@@ -18,7 +18,7 @@
 }
 
 .entry-message {
-    height:25px;
+    height:fit-content;
     font-size: 15px;
 }
 

@@ -1,4 +1,11 @@
+// ---------- Globals ---------- //
+
 const config = require('../config/configuration.json');
+
+// Fallback if server is offline when making call to the loadTags function
+var loadTagsTimeout;
+
+// ---------- Public Functions ---------- //
 
 function saveBlacklist(subreddit, callback) {
     chrome.storage.sync.get([
@@ -212,28 +219,31 @@ function loadRecommendations(seedData, subscribedSubreddits, showLoadingDIV, cal
         self.loadingNewRecommendations = true;
 
         if (showLoadingDIV) {
-            // Insert loading animation
-            var recommendationsListDIV = document.getElementById('recommendations');
-            var loadingDIV = document.createElement("img");
-            loadingDIV.setAttribute("src", chrome.runtime.getURL('./img/loading.gif'));
-            loadingDIV.setAttribute("id", "recommendations-loading");
-            loadingDIV.style.maxHeight = "100px";
-            recommendationsListDIV.insertBefore(loadingDIV, recommendationsListDIV.firstElementChild);
+            // Show loading animation
+            document.getElementById('recommendations-loading').style.display = "block";
+            document.getElementById('recommendations').style.display = "none";
+        }
+
+        // Hide loading animation
+        function hideLoadingDIV() {
+            document.getElementById('recommendations').style.display = "";
+            document.getElementById('recommendations-loading').style.display = "none";
         }
 
         var xhr = new XMLHttpRequest();
+        xhr.open('POST', config.RREServerURL + '/api/subreddits/recommended');
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
         xhr.onload = function() {
             if (this.status === 200) {
                 var response = JSON.parse(this.response);
+
                 chrome.storage.sync.set({
                     RRERecommendations: response
                 }, function() {
                     self.loadingNewRecommendations = false;
                     if (showLoadingDIV) {
-                        // Remove loading animation
-                        var recommendationsListDIV = document.getElementById('recommendations');
-                        var loadingDIV = document.getElementById("recommendations-loading");
-                        recommendationsListDIV.removeChild(loadingDIV);
+                        hideLoadingDIV();
                     }
                     callback(response);
                 });
@@ -241,8 +251,15 @@ function loadRecommendations(seedData, subscribedSubreddits, showLoadingDIV, cal
                 alert("RRE Server Error: " + this.status);
             }
         };
-        xhr.open('POST', config.RREServerURL + '/api/subreddits/recommended');
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+        // Retry the request every 30 minutes while webpage is open
+        xhr.onerror = function(error) {
+            if (showLoadingDIV) {
+                hideLoadingDIV();
+            }
+            callback(undefined);
+        };
+
         xhr.send(JSON.stringify({
             tags: seedData.RRETags,
             subscribed: subscribedSubreddits,
@@ -254,10 +271,22 @@ function loadRecommendations(seedData, subscribedSubreddits, showLoadingDIV, cal
 
 function loadTags() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', config.RREServerURL + '/api/tags/');
+    xhr.open('GET', config.RREServerURL + '/api/tags/', true);
+
     xhr.onload = function() {
         if (this.status === 200) {
+            if (loadTagsTimeout) {
+                clearTimeout(loadTagsTimeout);
+                loadTagsTimeout = undefined;
+            }
             var tagsInput = document.getElementById('tagsInput');
+
+            // Clear out existing tag options (if any)
+            while (tagsInput.childElementCount > 0) {
+                tagsInput.removeChild(tagsInput.firstElementChild);
+            }
+
+            // Replace with tags from response
             var response = JSON.parse(this.response);
             var i;
             for (i in response) {
@@ -267,6 +296,14 @@ function loadTags() {
             }
         }
     };
+
+    // Retry the request every 30 minutes while webpage is open
+    xhr.onerror = function(error) {
+        loadTagsTimeout = setTimeout(function() {
+            loadTags();
+        }, config.retryRequestToServerTimeoutDuration);
+    };
+
     xhr.send();
 }
 
@@ -274,12 +311,17 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', config.RREServerURL + '/api/subreddits/getTagsForSubreddits');
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
     xhr.onload = function() {
         var response = JSON.parse(this.response);
         var totalTags = Object.keys(response).length;
         var tagListDIV = document.getElementById('tags');
-        // clear list if it has more tags than give (this can be optimized)
-        // we dont have to clear list if it has less tags because createListEntry prevents duplicates
+
+        // Clear any potential status notifications
+        setListEntryMessage('tags');
+
+        // Clear list if it has more tags than give (this can be optimized)
+        // We dont have to clear list if it has less tags because createListEntry prevents duplicates
         if (tagListDIV.childElementCount > totalTags) {
             while (!!tagListDIV.firstChild) {
                 tagListDIV.removeChild(tagListDIV.firstChild);
@@ -289,11 +331,18 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
         function deleteCallback(tag) {
             tagListDIV.removeChild(document.getElementById("tags-" + tag));
         }
+
         var tag;
         for (tag in response) {
             createListEntry('tags', tag, false, deleteCallback);
         }
     }
+
+    xhr.onerror = function(error) {
+        setListEntryMessage('tags');
+        setListEntryMessage('tags', "RRE Server appears to be offline...<br>Wait a bit before trying again");
+    };
+
     xhr.send(JSON.stringify({
         subreddits: subscribedSubreddits,
         maxDistance: maxDistance

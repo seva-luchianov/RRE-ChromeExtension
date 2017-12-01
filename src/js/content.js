@@ -14,6 +14,9 @@ var oldSettings = {};
 // Used to ensure the settings modal will close even if a message isnt recieved after a timeout period.
 var closeModalTimeout;
 
+// Fallback if server is offline when making call to the loadRecommendations function
+var loadRecommendationsTimeout;
+
 // Sent with xhr recommendation requests
 var subscribedSubreddits = [];
 
@@ -22,6 +25,7 @@ var subscribedSubreddits = [];
 // Setup the container
 var RREContainer = document.createElement("div");
 RREContainer.setAttribute('class', 'spacer');
+const loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
 const optionshtml = chrome.runtime.getURL('./html/options.html');
 RREContainer.innerHTML =
     `<div>
@@ -31,6 +35,7 @@ RREContainer.innerHTML =
         </div>
         <lu id=recommendations>
         </lu>
+        <img id="recommendations-loading" style="display:none; max-height:100px;" src="${loadingGifURL}">
         <div id="optionswrapper" class="optionswrapper">
             <div class="optionswrapper-content">
                 <div class="title">RRE Settings</div>
@@ -146,16 +151,38 @@ function closeModalAndUpdateRecommendations(newTags) {
 }
 
 function refreshRecommendations(deletedRecommendation, forceRefresh) {
-    if (deletedRecommendation) {
+    var clearAll = typeof deletedRecommendation === 'boolean' && deletedRecommendation;
+
+    function clearRecommendations(clearAll, deletedRecommendation) {
         var recommendationsListDIV = document.getElementById('recommendations');
-        if (typeof deletedRecommendation === 'boolean') {
-            if (deletedRecommendation) {
-                while (!!recommendationsListDIV.firstElementChild) {
-                    recommendationsListDIV.removeChild(recommendationsListDIV.firstElementChild);
-                }
+        if (clearAll) {
+            while (!!recommendationsListDIV.firstElementChild) {
+                recommendationsListDIV.removeChild(recommendationsListDIV.firstElementChild);
             }
-        } else {
+        } else if (deletedRecommendation && recommendationsListDIV.contains(deletedRecommendation)) {
             recommendationsListDIV.removeChild(deletedRecommendation);
+        }
+    }
+
+    function processRecommendations(recommendations, entryMessage, entryImage) {
+        if (recommendations) {
+            if (loadRecommendationsTimeout) {
+                clearTimeout(loadRecommendationsTimeout);
+                loadRecommendationsTimeout = undefined;
+            }
+            clearRecommendations(clearAll, deletedRecommendation);
+            populateRecommendations(recommendations);
+        } else {
+            utils.setListEntryMessage("recommendations");
+            utils.setListEntryMessage(
+                "recommendations",
+                entryMessage,
+                entryImage
+            );
+
+            loadRecommendationsTimeout = setTimeout(function() {
+                utils.xhr.loadRecommendations(seedData, subscribedSubreddits, false, processRecommendations);
+            }, config.retryRequestToServerTimeoutDuration);
         }
     }
 
@@ -180,7 +207,12 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         } else {
             // we have seed data, caller function requests update
             if (forceRefresh) {
-                utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, populateRecommendations);
+                utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, function(recommendations) {
+                    processRecommendations(
+                        recommendations,
+                        "RRE Server appears to be offline...<br>Attempting automatically trying again in 30 minutes<br>(Or refresh the page)"
+                    );
+                });
             } else {
                 // we have seed data, do we have recommendations?
                 chrome.storage.sync.get([
@@ -188,12 +220,26 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
                 ], function(items) {
                     // There are no recommendations stored at all
                     if (!items.RRERecommendations) {
-                        utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, populateRecommendations);
+                        utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, function(recommendations) {
+                            processRecommendations(
+                                recommendations,
+                                "RRE Server appears to be offline...<br>Attempting automatically trying again in 30 minutes<br>(Or refresh the page)"
+                            );
+                        });
                     } else {
                         // recommendations exist, do we need to query for more?
                         if (items.RRERecommendations.length <= seedData.RRERecommendationLimit + config.RRERecommendationsCacheBufferSize) {
                             // we do have seed data, need to update recommendations
-                            utils.xhr.loadRecommendations(seedData, subscribedSubreddits, false, populateRecommendations);
+                            if (!clearAll) {
+                                clearRecommendations(clearAll, deletedRecommendation);
+                            }
+                            utils.xhr.loadRecommendations(seedData, subscribedSubreddits, false, function(recommendations) {
+                                processRecommendations(
+                                    recommendations,
+                                    "RRE Server appears to be offline...",
+                                    chrome.runtime.getURL('./img/loading-entry.gif')
+                                );
+                            });
                         }
                         // we should still have enough recommendations due to RRERecommendationsCacheBufferSize, lets show them.
                         populateRecommendations(items.RRERecommendations, seedData.RRERecommendationLimit, seedData.RREBlackList);
@@ -243,7 +289,13 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
 
         if (appendMessage) {
             if (utils.xhr.loadingNewRecommendations) {
-                utils.setListEntryMessage("recommendations", "Loading New Recommendations ", chrome.runtime.getURL('./img/loading-entry.gif'));
+                if (!loadRecommendationsTimeout) {
+                    utils.setListEntryMessage(
+                        "recommendations",
+                        "Loading New Recommendations ",
+                        chrome.runtime.getURL('./img/loading-entry.gif')
+                    );
+                }
             } else {
                 utils.setListEntryMessage("recommendations", "No More Recommendations :(");
             }
