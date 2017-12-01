@@ -1,3 +1,5 @@
+const config = require('../config/configuration.json');
+
 function saveBlacklist(subreddit, callback) {
     chrome.storage.sync.get([
         'RREBlackList',
@@ -95,17 +97,19 @@ function createListEntry(parentID, value, displayStatus, deleteCallback) {
     return true;
 }
 
-function setListEntryMessage(parentID, message) {
+function setListEntryMessage(parentID, message, image) {
     var existingMessage = getListEntryMessage(parentID);
     if (existingMessage) {
         // delete message if message is undefined or change otherwise
         if (message) {
             existingMessage.firstElementChild.innerHTML = message;
+        } else if (image) {
+            existingMessage.lastElementChild.src = image;
         } else {
             var parentDIV = document.getElementById(parentID);
             parentDIV.removeChild(existingMessage);
         }
-    } else if (message) {
+    } else if (message || image) {
         // create and insert
         var parentDIV = document.getElementById(parentID);
         var id = parentID + "-message";
@@ -114,13 +118,25 @@ function setListEntryMessage(parentID, message) {
         entry.setAttribute("id", id);
         entry.style.display = "block";
 
-        var valueDIV = document.createElement("div");
-        valueDIV.innerHTML = message;
-        valueDIV.style.display = "inline";
-        entry.appendChild(valueDIV);
+        if (message) {
+            var valueDIV = document.createElement("div");
+            valueDIV.innerHTML = message;
+            valueDIV.style.display = "inline";
+            entry.appendChild(valueDIV);
+        }
+
+        if (image) {
+            var imageDIV = document.createElement("img");
+            imageDIV.src = image;
+            imageDIV.style.display = "inline";
+            imageDIV.style.height = "20px";
+            entry.appendChild(imageDIV);
+        }
+
+        entry.className = "entry-message";
 
         if (parentID === "recommendations") {
-            entry.setAttribute("class", "recommendation");
+            entry.className += " entry-message-recommendation";
         }
 
         parentDIV.appendChild(entry);
@@ -225,20 +241,20 @@ function loadRecommendations(seedData, subscribedSubreddits, showLoadingDIV, cal
                 alert("RRE Server Error: " + this.status);
             }
         };
-        xhr.open('POST', 'https://localhost:8080/api/subreddits/recommended');
+        xhr.open('POST', config.RREServerURL + '/api/subreddits/recommended');
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.send(JSON.stringify({
             tags: seedData.RRETags,
             subscribed: subscribedSubreddits,
             blacklisted: seedData.RREBlackList,
-            maxRecommendations: module.exports.RRERecommendationsCacheSize
+            maxRecommendations: config.RRERecommendationsCacheSize
         }));
     }
 }
 
 function loadTags() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://localhost:8080/api/tags/');
+    xhr.open('GET', config.RREServerURL + '/api/tags/');
     xhr.onload = function() {
         if (this.status === 200) {
             var tagsInput = document.getElementById('tagsInput');
@@ -256,7 +272,7 @@ function loadTags() {
 
 function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://localhost:8080/api/subreddits/getTagsForSubreddits');
+    xhr.open('POST', config.RREServerURL + '/api/subreddits/getTagsForSubreddits');
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function() {
         var response = JSON.parse(this.response);
@@ -285,10 +301,6 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
 }
 
 module.exports = {
-    RRERecommendationsCacheSize: 30, // The max size of RRERecommendations.length
-    RRERecommendationsCacheBufferSize: 10, // The minimum result of RRERecommendations.length - RRERecommendationLimit
-    closeModalTimeoutDuration: 1000, // The time in milliseconds before the timeout to close the options modal is triggered if the close message is not recieved
-    displayStatusMessageDuration: 1000, // The amount of time in milliseconds to display a status message before hiding it
     saveBlacklist: saveBlacklist,
     createListEntry: createListEntry,
     setListEntryMessage: setListEntryMessage,

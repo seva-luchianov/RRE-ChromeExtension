@@ -1,6 +1,7 @@
 // ---------- Globals ---------- //
 
 const utils = require('./utils');
+const config = require('../config/configuration.json');
 
 // Sent with xhr recommendation requests
 var subscribedSubreddits = [];
@@ -40,8 +41,8 @@ document.getElementById("recommendationLimit").addEventListener("keyup", functio
         } else {
             if (maxRecommendations < 0) {
                 status.textContent = 'Value must be at least 1';
-            } else if (maxRecommendations > utils.RRERecommendationsCacheSize - utils.RRERecommendationsCacheBufferSize) {
-                status.textContent = 'Value cannot exceed ' + (utils.RRERecommendationsCacheSize - utils.RRERecommendationsCacheBufferSize);
+            } else if (maxRecommendations > config.RRERecommendationsCacheSize - config.RRERecommendationsCacheBufferSize) {
+                status.textContent = 'Value cannot exceed ' + (config.RRERecommendationsCacheSize - config.RRERecommendationsCacheBufferSize);
             } else {
                 chrome.storage.sync.set({
                     RRERecommendationLimit: maxRecommendations
@@ -50,7 +51,7 @@ document.getElementById("recommendationLimit").addEventListener("keyup", functio
                     status.textContent = 'Values saved';
                     setTimeout(function() {
                         status.textContent = '';
-                    }, utils.displayStatusMessageDurationValue);
+                    }, config.displayStatusMessageDuration);
                 });
             }
         }
@@ -95,7 +96,7 @@ document.getElementById("blacklistInput").addEventListener("keyup", function(eve
             status.textContent = 'Input cannot be interpreted as subreddit';
             setTimeout(function() {
                 status.textContent = '';
-            }, utils.displayStatusMessageDurationValue);
+            }, config.displayStatusMessageDuration);
         } else {
             subreddit = "/r/" + subreddit + "/";
             utils.createListEntry('blacklist', subreddit, true, function() {

@@ -1,6 +1,7 @@
 // ---------- Globals ---------- //
 
 const utils = require('./utils');
+const config = require('../config/configuration.json');
 
 // Used to prevent multiple identical requests to server if user triggers suggestion refresh.
 // Set to true before send and set to false inside the onload.
@@ -72,7 +73,7 @@ document.getElementById("close-optionswrapper").onclick = function() {
     }, '*');
     closeModalTimeout = setTimeout(function() {
         closeModalAndUpdateRecommendations();
-    }, utils.closeModalTimeoutDuration);
+    }, config.closeModalTimeoutDuration);
 }
 
 // When the user clicks anywhere outside of the modal, close it
@@ -84,7 +85,7 @@ window.onclick = function(event) {
         }, '*');
         closeModalTimeout = setTimeout(function() {
             closeModalAndUpdateRecommendations();
-        }, utils.closeModalTimeoutDuration);
+        }, config.closeModalTimeoutDuration);
     }
 }
 
@@ -190,7 +191,7 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
                         utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, populateRecommendations);
                     } else {
                         // recommendations exist, do we need to query for more?
-                        if (items.RRERecommendations.length <= seedData.RRERecommendationLimit + utils.RRERecommendationsCacheBufferSize) {
+                        if (items.RRERecommendations.length <= seedData.RRERecommendationLimit + config.RRERecommendationsCacheBufferSize) {
                             // we do have seed data, need to update recommendations
                             utils.xhr.loadRecommendations(seedData, subscribedSubreddits, false, populateRecommendations);
                         }
@@ -242,13 +243,13 @@ function populateRecommendations(recommendations, recommendationLimit, blackList
 
         if (appendMessage) {
             if (utils.xhr.loadingNewRecommendations) {
-                utils.setListEntryMessage("recommendations", "Loading New Recommendations...");
+                utils.setListEntryMessage("recommendations", "Loading New Recommendations ", chrome.runtime.getURL('./img/loading-entry.gif'));
             } else {
                 utils.setListEntryMessage("recommendations", "No More Recommendations :(");
             }
         } else {
             // remove message if exists
-            utils.setListEntryMessage("recommendations", "");
+            utils.setListEntryMessage("recommendations");
         }
     });
 }
