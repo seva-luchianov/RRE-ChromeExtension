@@ -52,7 +52,9 @@ function saveBlacklist(subreddit, callback) {
             RREBlackList: blacklist,
             RRERecommendations: recommendations
         }, function() {
-            callback();
+            if (callback) {
+                callback();
+            }
         });
     });
 }

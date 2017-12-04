@@ -12,7 +12,7 @@ window.addEventListener('message', function(event) {
     if (event.srcElement.location.host === chrome.runtime.id) {
         if (event.data.reason === "optionswrapper-closed") {
             saveTags(false, function(newTags) {
-                document.getElementById('first-time-setup-tags').style.display = "";
+                document.getElementById('first-time-setup-tags').style.display = "none";
                 window.parent.postMessage({
                     reason: "optionswrapper-closed",
                     data: newTags
@@ -100,7 +100,9 @@ document.getElementById("blacklistInput").addEventListener("keyup", function(eve
         } else {
             subreddit = "/r/" + subreddit + "/";
             utils.createListEntry('blacklist', subreddit, true, function() {
-                utils.saveBlacklist(subreddit, undefined);
+                utils.saveBlacklist(subreddit, function() {
+                    document.getElementById('blacklist').removeChild(document.getElementById("blacklist-" + subreddit));
+                });
             });
             utils.saveBlacklist(subreddit, function() {
                 blacklistInput.value = "";
