@@ -164,20 +164,7 @@ function getListEntryMessage(parentID) {
     }
 }
 
-function initializeSubscribedSubreddits(calledFromFallback, callback) {
-    function srListListener(event) {
-        if (event.target.parentElement.id === "srList" && event.target.nodeName === "TBODY") {
-            initializeSubscribedSubreddits(true, callback);
-        }
-    }
-
-    if (calledFromFallback) {
-        var srListContainer = document.getElementById("srDropdownContainer");
-        if (srListContainer) {
-            document.removeEventListener("DOMNodeInserted", srListListener);
-            srListContainer.click();
-        }
-    }
+function initializeSubscribedSubreddits(callback) {
     var subscribedSubreddits = [];
     var srList = document.getElementsByClassName("sr-list");
     var resLayout = false;
@@ -188,8 +175,18 @@ function initializeSubscribedSubreddits(calledFromFallback, callback) {
         // RES Layout
         resLayout = true;
         srList = document.getElementById("srList").lastElementChild;
-        if (!srList && !calledFromFallback) {
+        if (!srList) {
             // Fallback if subreddit table hasn't loaded yet
+            function srListListener(event) {
+                if (event.target.parentElement.id === "srList" && event.target.nodeName === "TBODY") {
+                    var srListContainer = document.getElementById("srDropdownContainer");
+                    if (srListContainer) {
+                        document.removeEventListener("DOMNodeInserted", srListListener);
+                        srListContainer.click();
+                    }
+                    initializeSubscribedSubreddits(callback);
+                }
+            }
             var srListContainer = document.getElementById("srDropdownContainer");
             document.addEventListener("DOMNodeInserted", srListListener);
             srListContainer.click();

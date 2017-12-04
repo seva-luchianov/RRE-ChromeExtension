@@ -195,7 +195,7 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
             // No seed data, first time setup.
             // Extract user subscriptions from reddit DOM
-            utils.initializeSubscribedSubreddits(false, function(extractedSubreddits) {
+            utils.initializeSubscribedSubreddits(function(extractedSubreddits) {
                 subscribedSubreddits = extractedSubreddits;
                 var frame = document.getElementById('optionswrapper-frame');
                 frame.contentWindow.postMessage({
