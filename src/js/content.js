@@ -56,39 +56,31 @@ if (sideBarDiv) {
 
     // First time initialization of recommendations on page load
     refreshRecommendations(false, false);
+
+    // initialization of event listeners on page load
+    initializeEventListeners();
 }
 
 // ---------- Event Listeners ---------- //
 
-document.getElementById('settings-button').addEventListener('click', function() {
-    var frame = document.getElementById('optionswrapper-frame');
-    frame.contentWindow.postMessage({
-        reason: "optionswrapper-opened"
-    }, '*');
-    chrome.storage.sync.get([
-        'RRERecommendationLimit',
-        'RREBlackList',
-        'RRETags'
-    ], function(items) {
-        oldSettings = items;
-        document.getElementById('optionswrapper').style.display = "block";
+function initializeEventListeners() {
+    document.getElementById('settings-button').addEventListener('click', function() {
+        var frame = document.getElementById('optionswrapper-frame');
+        frame.contentWindow.postMessage({
+            reason: "optionswrapper-opened"
+        }, '*');
+        chrome.storage.sync.get([
+            'RRERecommendationLimit',
+            'RREBlackList',
+            'RRETags'
+        ], function(items) {
+            oldSettings = items;
+            document.getElementById('optionswrapper').style.display = "block";
+        });
     });
-});
 
-// When the user clicks on <span> (x), close the modal
-document.getElementById("close-optionswrapper").onclick = function() {
-    var frame = document.getElementById('optionswrapper-frame');
-    frame.contentWindow.postMessage({
-        reason: "optionswrapper-closed"
-    }, '*');
-    closeModalTimeout = setTimeout(function() {
-        closeModalAndUpdateRecommendations();
-    }, config.closeModalTimeoutDuration);
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == document.getElementById("optionswrapper")) {
+    // When the user clicks on <span> (x), close the modal
+    document.getElementById("close-optionswrapper").onclick = function() {
         var frame = document.getElementById('optionswrapper-frame');
         frame.contentWindow.postMessage({
             reason: "optionswrapper-closed"
@@ -97,18 +89,31 @@ window.onclick = function(event) {
             closeModalAndUpdateRecommendations();
         }, config.closeModalTimeoutDuration);
     }
-}
 
-window.addEventListener('message', function(event) {
-    if (chrome.runtime.getURL("/").indexOf(event.origin) !== -1) {
-        if (event.data.reason === "optionswrapper-closed") {
-            // Stop the backup modal close funtion since we received a message to close it.
-            clearTimeout(closeModalTimeout);
-            // Immediately close the modal.
-            closeModalAndUpdateRecommendations(event.data.data);
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == document.getElementById("optionswrapper")) {
+            var frame = document.getElementById('optionswrapper-frame');
+            frame.contentWindow.postMessage({
+                reason: "optionswrapper-closed"
+            }, '*');
+            closeModalTimeout = setTimeout(function() {
+                closeModalAndUpdateRecommendations();
+            }, config.closeModalTimeoutDuration);
         }
     }
-});
+
+    window.addEventListener('message', function(event) {
+        if (chrome.runtime.getURL("/").indexOf(event.origin) !== -1) {
+            if (event.data.reason === "optionswrapper-closed") {
+                // Stop the backup modal close funtion since we received a message to close it.
+                clearTimeout(closeModalTimeout);
+                // Immediately close the modal.
+                closeModalAndUpdateRecommendations(event.data.data);
+            }
+        }
+    });
+}
 
 // ---------- Private Functions ---------- //
 
