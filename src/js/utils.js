@@ -170,7 +170,7 @@ function initializeSubscribedSubreddits(callback) {
     var resLayout = false;
     if (srList.length !== 0) {
         // Standard Reddit Layout
-        srList = srList[0].lastElementChild;
+        srList = srList[0].children[2];
     } else {
         // RES Layout
         resLayout = true;
@@ -209,6 +209,7 @@ function extractSubscribedSubreddit(subredditDIV, resLayout) {
         subredditName = subredditDIV.lastElementChild.innerText;
     }
     subredditName = "/r/" + subredditName + "/";
+    console.log(subredditName);
     return subredditName.toLowerCase();
 }
 

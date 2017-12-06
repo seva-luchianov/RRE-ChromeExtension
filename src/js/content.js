@@ -22,36 +22,41 @@ var subscribedSubreddits = [];
 
 // ---------- Page Load Execution ---------- //
 
-// Setup the container
-var RREContainer = document.createElement("div");
-RREContainer.setAttribute('class', 'spacer');
-const loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
-const optionshtml = chrome.runtime.getURL('./html/options.html');
-RREContainer.innerHTML =
-    `<div>
-        <div>
-            <div style="display:inline; font-size:16px; font-weight:bold;">Recommendations:</div>
-            <button id="settings-button" style="position:relative; left: 28%">Settings</button>
-        </div>
-        <lu id=recommendations>
-        </lu>
-        <img id="recommendations-loading" style="display:none; max-height:100px;" src="${loadingGifURL}">
-        <div id="optionswrapper" class="optionswrapper">
-            <div class="optionswrapper-content">
-                <div class="title">RRE Settings</div>
-                <span id="close-optionswrapper" class="close">&times;</span>
-                <iframe id="optionswrapper-frame" class="optionswrapper-frame" align="left" src="${optionshtml}">
-                </iframe>
-            </div>
-        </div>
-    </div>`;
-
-// Inject into reddit sidebar
+// Get the page element extension will attach to
 var sideBarDiv = document.getElementsByClassName("side")[0];
-sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
 
-// First time initialization of recommendations on page load
-refreshRecommendations(false, false);
+// Assert that we have the container to attach to
+if (sideBarDiv) {
+    // Setup the container
+    var RREContainer = document.createElement("div");
+    RREContainer.setAttribute('class', 'spacer');
+    const loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
+    const optionshtml = chrome.runtime.getURL('./html/options.html');
+    RREContainer.innerHTML =
+        `<div>
+            <div>
+                <div style="display:inline; font-size:16px; font-weight:bold;">Recommendations:</div>
+                <button id="settings-button" style="position:relative; left: 28%">Settings</button>
+            </div>
+            <lu id=recommendations>
+            </lu>
+            <img id="recommendations-loading" style="display:none; max-height:100px;" src="${loadingGifURL}">
+            <div id="optionswrapper" class="optionswrapper">
+                <div class="optionswrapper-content">
+                    <div class="title">RRE Settings</div>
+                    <span id="close-optionswrapper" class="close">&times;</span>
+                    <iframe id="optionswrapper-frame" class="optionswrapper-frame" align="left" src="${optionshtml}">
+                    </iframe>
+                </div>
+            </div>
+        </div>`;
+
+    // Inject into reddit sidebar
+    sideBarDiv.insertBefore(RREContainer, sideBarDiv.childNodes[1]);
+
+    // First time initialization of recommendations on page load
+    refreshRecommendations(false, false);
+}
 
 // ---------- Event Listeners ---------- //
 
