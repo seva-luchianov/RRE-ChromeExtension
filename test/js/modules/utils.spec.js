@@ -33,7 +33,41 @@ describe('Utility Functions', () => {
             var entryValue = testUtils.uuid('message');
             var firstCreated = utils.createListEntry('recommendations', entryValue, false, function() {});
             var secondCreated = utils.createListEntry('recommendations', entryValue, false, function() {});
-            expect(firstCreated).to.not.equal(secondCreated)
+            expect(firstCreated).to.not.equal(secondCreated);
+        });
+    });
+
+    describe('setListEntryMessage', () => {
+        it('Creates the List Entry Message', () => {
+            var message = testUtils.uuid('message');
+            utils.setListEntryMessage('recommendations', message, undefined);
+            var messageDIV = document.getElementById('recommendations-message');
+            expect(messageDIV).to.not.be.undefined;
+        });
+
+        it('Modifies existing List Entry Message', () => {
+            var message = testUtils.uuid('message');
+            utils.setListEntryMessage('recommendations', message, undefined);
+            var message2 = testUtils.uuid('message');
+            utils.setListEntryMessage('recommendations', message2, undefined);
+            var messageDIV = document.getElementById('recommendations-message');
+            expect(messageDIV.firstElementChild.innerHTML).to.not.equal(message);
+        });
+
+        it('Removes List Entry Message', () => {
+            var message = testUtils.uuid('message');
+            utils.setListEntryMessage('recommendations', message, undefined);
+            utils.setListEntryMessage('recommendations', undefined, undefined);
+            var messageDIV = document.getElementById('recommendations-message');
+            expect(messageDIV).to.be.null;
+        });
+
+        it('Creates List Entry Message With Image', () => {
+            var message = testUtils.uuid('message');
+            var imageSource = "/path/to/image.png";
+            utils.setListEntryMessage('recommendations', message, imageSource);
+            var messageDIV = document.getElementById('recommendations-message');
+            expect(messageDIV.lastElementChild.src).to.equal(imageSource);
         });
     });
 
