@@ -3,13 +3,13 @@ const spies = require('chai-spies');
 chai.use(spies);
 const assert = chai.assert;
 const expect = chai.expect;
-var content = require('../../../src/js/utils');
+var utils = require('../../../src/js/utils');
 
 describe('utility functions', () => {
-
-    describe('func 1', () => {
-        it('func 1 does this', () => {
-
+    describe('createListEntry', () => {
+        it('works', () => {
+            // console.log(document.querySelector('body').innerHTML);
+            utils.createListEntry('recommendations');
         })
     });
 });

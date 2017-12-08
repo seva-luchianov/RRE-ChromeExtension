@@ -30,8 +30,16 @@ if (sideBarDiv) {
     // Setup the container
     var RREContainer = document.createElement("div");
     RREContainer.setAttribute('class', 'spacer');
-    const loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
-    const optionshtml = chrome.runtime.getURL('./html/options.html');
+    var loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
+    var optionshtml = chrome.runtime.getURL('./html/options.html');
+
+    if (!loadingGifURL) {
+        loadingGifURL = './img/loading.gif';
+    }
+    if (!optionshtml) {
+        optionshtml = './html/options.html';
+    }
+
     RREContainer.innerHTML =
         `<div>
             <div>
