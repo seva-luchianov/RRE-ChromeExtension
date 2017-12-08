@@ -204,12 +204,12 @@ function initializeSubscribedSubreddits(callback) {
 function extractSubscribedSubreddit(subredditDIV, resLayout) {
     var subredditName;
     if (resLayout) {
-        subredditName = subredditDIV.firstElementChild.lastElementChild.innerText;
+        subredditName = subredditDIV.firstElementChild.lastElementChild.innerHTML;
     } else {
-        subredditName = subredditDIV.lastElementChild.innerText;
+        subredditName = subredditDIV.lastElementChild.innerHTML;
     }
-    subredditName = "/r/" + subredditName + "/";
     console.log(subredditName);
+    subredditName = "/r/" + subredditName + "/";
     return subredditName.toLowerCase();
 }
 

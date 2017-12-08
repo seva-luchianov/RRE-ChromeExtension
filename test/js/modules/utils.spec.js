@@ -6,9 +6,9 @@ const expect = chai.expect;
 var utils = require('../../../src/js/utils');
 var testUtils = require('../utils');
 
-describe('utility functions', () => {
+describe('Utility Functions', () => {
     describe('createListEntry', () => {
-        it('creates the List Entry', () => {
+        it('Creates the List Entry', () => {
             var entryValue = testUtils.uuid('message');
             var deleteFunctionWorks = false;
             utils.createListEntry('recommendations', entryValue, false, function() {
@@ -27,6 +27,39 @@ describe('utility functions', () => {
                     }, 10);
                 }
             }
+        });
+
+        it('Doesn\'t create duplicate entries', () => {
+            var entryValue = testUtils.uuid('message');
+            var firstCreated = utils.createListEntry('recommendations', entryValue, false, function() {});
+            var secondCreated = utils.createListEntry('recommendations', entryValue, false, function() {});
+            expect(firstCreated).to.not.equal(secondCreated)
+        });
+    });
+
+    describe('initializeSubscribedSubreddits', () => {
+        describe('Using Vanilla Reddit', () => {
+            it('Parses Subscriptions from Header', () => {
+                testUtils.setUpDomForVanillaReddit();
+                utils.initializeSubscribedSubreddits(function(parsedSubscriptions) {
+                    expect(parsedSubscriptions.length).to.equal(testUtils.expectedSubscriptions.length)
+                    for (var i in testUtils.expectedSubscriptions) {
+                        expect(parsedSubscriptions).to.include(testUtils.expectedSubscriptions[i]);
+                    }
+                });
+            });
+        });
+
+        describe('Using RES', () => {
+            it('Parses Subscriptions from Header', () => {
+                testUtils.setUpDomForRES();
+                utils.initializeSubscribedSubreddits(function(parsedSubscriptions) {
+                    expect(parsedSubscriptions.length).to.equal(testUtils.expectedSubscriptions.length)
+                    for (var i in testUtils.expectedSubscriptions) {
+                        expect(parsedSubscriptions).to.include(testUtils.expectedSubscriptions[i]);
+                    }
+                });
+            });
         });
     });
 });
