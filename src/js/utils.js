@@ -207,8 +207,7 @@ function extractSubscribedSubreddit(subredditDIV, resLayout) {
         subredditName = subredditDIV.firstElementChild.lastElementChild.innerHTML;
     } else {
         subredditName = subredditDIV.lastElementChild.innerHTML;
-    }
-    console.log(subredditName);
+    };
     subredditName = "/r/" + subredditName + "/";
     return subredditName.toLowerCase();
 }
