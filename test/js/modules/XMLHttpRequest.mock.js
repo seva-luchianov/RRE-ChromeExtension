@@ -4,7 +4,7 @@ module.exports = {
     XMLHttpRequest: function() {
         var self = this;
         this.status = 200;
-        this.response;
+        this.response = "ok";
 
         var apiMock = {};
         this.response = apiMock[config.RREServerURL + '/api/tags/'] = function() {
@@ -45,8 +45,10 @@ module.exports = {
 
         this.send = function(body) {
             body = JSON.parse(body);
-            if (body.tags[0] === "loadRecommendations") {
-                self.response(body.tags[1] === "200");
+            if (body) {
+                if (body.tags[0] === "loadRecommendations") {
+                    self.response(body.tags[1] === "200");
+                }
             }
             self.response = JSON.stringify(self.response)
             console.log("MOCK SERVER RESPONSE: " + self.response);

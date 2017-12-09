@@ -123,7 +123,7 @@ describe('Utility Functions', () => {
 
     describe('loadTags test', () => {
         it('creates the List Entry', () => {
-
+            //utils.xhr.loadTags();
         });
     });
 

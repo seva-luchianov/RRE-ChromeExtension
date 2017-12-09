@@ -202,9 +202,6 @@ function refreshRecommendations(deletedRecommendation, forceRefresh) {
         'RRETags',
         'RREBlackList'
     ], function(seedData) {
-        if (seedData.testingMode === true) {
-            return;
-        }
         // Do we have seed data?
         if (!seedData.RRETags || !seedData.RREBlackList || !seedData.RRERecommendationLimit) {
             // No seed data, first time setup.

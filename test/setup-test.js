@@ -12,6 +12,23 @@ const dom = new JSDOM(
             <div class="side">
                 <div></div>
                 <div></div>
+                <div>
+                    <div>
+                        <div style="display:inline; font-size:16px; font-weight:bold;">Recommendations:</div>
+                        <button id="settings-button" style="position:relative; left: 28%">Settings</button>
+                    </div>
+                    <lu id=recommendations>
+                    </lu>
+                    <img id="recommendations-loading" style="display:none; max-height:100px;" src="">
+                    <div id="optionswrapper" class="optionswrapper">
+                        <div class="optionswrapper-content">
+                            <div class="title">RRE Settings</div>
+                            <span id="close-optionswrapper" class="close">&times;</span>
+                            <iframe id="optionswrapper-frame" class="optionswrapper-frame" align="left" src="">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
             </div>
         </body>
 
@@ -39,9 +56,6 @@ const dom = new JSDOM(
     </html>`
 );
 
-var chrome = require('sinon-chrome');
-
-// global.chrome = chrome;
 global.chrome = require('./js/modules/chrome.mock.js');
 global.window = dom.window;
 global.document = dom.window._document;
