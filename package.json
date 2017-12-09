@@ -17,7 +17,7 @@
         "build": "mkdir -p ./build/prod && webpack --config ./webpack/webpack.config.prod.js",
         "start": "mkdir -p ./build/dev && webpack --config ./webpack/webpack.config.dev.js",
         "lint": "eslint src/js/",
-        "test": "nyc mocha-webpack --require ./test/create-DOM.js --webpack-config ./webpack/webpack.config.test.js \"test/js/modules/*.spec.js\"",
+        "test": "nyc mocha-webpack --require ./test/setup-test.js --webpack-config ./webpack/webpack.config.test.js \"test/js/modules/*.spec.js\"",
         "test:ci": "mocha-webpack --webpack-config ./webpack/webpack.config.test.js \"src/**/*.spec.js\""
     },
     "dependencies": {

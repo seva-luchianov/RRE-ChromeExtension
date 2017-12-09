@@ -7,17 +7,17 @@ var utils = require('../../../src/js/utils');
 var testUtils = require('../utils');
 
 const seedData = {
-  RRETags: ['stories', 'technology', 'food'],
-  RREBlackList: ['/r/photography']
-},
-subscribedSubreddits = ['/r/gaming', '/r/pics']
+    RRETags: ['stories', 'technology', 'food'],
+    RREBlackList: ['/r/photography']
+};
+const subscribedSubreddits = ['/r/gaming', '/r/pics'];
 
 describe('utility functions', () => {
     describe('loadRecommendations test', () => {
         it('works', () => {
-          utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, function (response) {
-            console.log("wtf this works?")
-          })
+            utils.xhr.loadRecommendations(seedData, subscribedSubreddits, true, function(response) {
+                console.log("wtf this works?");
+            })
         });
     });
 
