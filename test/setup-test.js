@@ -41,26 +41,8 @@ const dom = new JSDOM(
 
 var chrome = require('sinon-chrome');
 
-global.chrome = chrome;
-/*global.chrome = {
-    storage: {
-        sync: {
-            get: function(search, callback) {
-                callback({});
-            },
-            set: function(items, callback) {
-                callback();
-                // Do Nothing
-            }
-        },
-        savedItems: {}
-    },
-    runtime: {
-        getURL: function(url) {
-            return url;
-        }
-    }
-};*/
+// global.chrome = chrome;
+global.chrome = require('./js/modules/chrome.mock.js');
 global.window = dom.window;
 global.document = dom.window._document;
 global.XMLHttpRequest = require('./js/modules/XMLHttpRequest.mock.js').XMLHttpRequest;

@@ -103,8 +103,7 @@ describe('Utility Functions', () => {
                 RRETags: ['loadRecommendations', '200'],
                 RREBlackList: []
             }, [], false, function(response) {
-                console.log('FINISHED');
-                expect(response.subreddit).to.be("loadRecommendations");
+                expect(response[0].subreddit).to.equal("/r/loadRecommendations/");
             });
         });
 
@@ -113,7 +112,7 @@ describe('Utility Functions', () => {
                 RRETags: ['loadRecommendations', '500'],
                 RREBlackList: []
             }, [], false, function(response) {
-                expect(1).to.be(2);
+                expect.fail();
             });
             setTimeout(function() {
                 console.log(alertTriggered);
