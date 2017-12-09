@@ -96,41 +96,72 @@ describe('Utility Functions', () => {
             });
         });
     });
-
-    describe('loadRecommendations test', () => {
-        it('Works', () => {
-            utils.xhr.loadRecommendations({
-                RRETags: ['loadRecommendations', '200'],
-                RREBlackList: []
-            }, [], false, function(response) {
-                console.log("chrome storage callback works");
-                expect(response[0].subreddit).to.equal("/r/loadRecommendations/");
-            });
-        });
-
-        it('If Server Error, Display Alert', () => {
-            utils.xhr.loadRecommendations({
-                RRETags: ['loadRecommendations', '500'],
-                RREBlackList: []
-            }, [], false, function(response) {
-                expect.fail();
-            });
+    describe('Utility XHR Functions', () => {
+        after((done) => {
+            // After all xhr tests have finished running, check if elements in the dom have changed to assert functionality
             setTimeout(function() {
-                console.log(alertTriggered);
-                alertTriggered = false;
+                function assertLoadRecommendations() {
+                    alertTriggered = false;
+                    console.log('assertLoadRecommendations Completed');
+                }
+                assertLoadRecommendations();
+
+                function assertLoadTags() {
+                    var tagsInput = document.getElementById('tagsInput');
+                    expect(tagsInput.childElementCount).to.equal(3);
+                    for (var i = 0; i < tagsInput.childElementCount; i++) {
+                        console.log(tagsInput.children[i].innerHTML);
+                        expect(["tag1", "tag2", "tag3"]).to.include(tagsInput.children[i].innerHTML);
+                    }
+                    console.log('assertLoadTags Completed');
+                }
+                assertLoadTags();
+
+                function assertGetTagsForSubscriptions() {
+                    var tagListDIV = document.getElementById('tags');
+                    expect(tagListDIV.childElementCount).to.equal(3);
+                    for (var i = 0; i < tagListDIV.childElementCount; i++) {
+                        console.log(tagListDIV.children[i].firstElementChild.innerHTML);
+                        expect(["tag1", "tag2", "tag3"]).to.include(tagListDIV.children[i].firstElementChild.innerHTML);
+                    }
+                    console.log('assertGetTagsForSubscriptions Completed');
+                }
+                assertGetTagsForSubscriptions();
+                done();
             }, 10);
         });
-    });
 
-    describe('loadTags test', () => {
-        it('creates the List Entry', () => {
-            utils.xhr.loadTags();
+        describe('loadRecommendations test', () => {
+            it('Works', () => {
+                utils.xhr.loadRecommendations({
+                    RRETags: ['loadRecommendations', '200'],
+                    RREBlackList: []
+                }, [], false, function(response) {
+                    console.log("chrome storage callback works");
+                    expect(response[0].subreddit).to.equal("/r/loadRecommendations/");
+                });
+            });
+
+            it('If Server Error, Display Alert', () => {
+                utils.xhr.loadRecommendations({
+                    RRETags: ['loadRecommendations', '500'],
+                    RREBlackList: []
+                }, [], false, function(response) {
+                    expect.fail();
+                });
+            });
         });
-    });
 
-    describe('getTagsForSubscriptions test', () => {
-        it('creates the List Entry', () => {
+        describe('loadTags test', () => {
+            it('Works', () => {
+                utils.xhr.loadTags();
+            });
+        });
 
+        describe('getTagsForSubscriptions test', () => {
+            it('Works', () => {
+                utils.xhr.getTagsForSubscriptions(['getTagsForSubscriptions'], 1);
+            });
         });
     });
 });

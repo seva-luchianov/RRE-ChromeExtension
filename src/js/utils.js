@@ -286,7 +286,6 @@ function loadTags() {
             }
 
             // Replace with tags from response
-            console.log(this.response);
             var response = JSON.parse(this.response);
             var i;
             for (i in response) {
@@ -313,28 +312,30 @@ function getTagsForSubscriptions(subscribedSubreddits, maxDistance) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 
     xhr.onload = function() {
-        var response = JSON.parse(this.response);
-        var totalTags = Object.keys(response).length;
-        var tagListDIV = document.getElementById('tags');
+        if (this.status === 200) {
+            var response = JSON.parse(this.response);
+            var totalTags = Object.keys(response).length;
+            var tagListDIV = document.getElementById('tags');
 
-        // Clear any potential status notifications
-        setListEntryMessage('tags');
+            // Clear any potential status notifications
+            setListEntryMessage('tags');
 
-        // Clear list if it has more tags than give (this can be optimized)
-        // We dont have to clear list if it has less tags because createListEntry prevents duplicates
-        if (tagListDIV.childElementCount > totalTags) {
-            while (!!tagListDIV.firstChild) {
-                tagListDIV.removeChild(tagListDIV.firstChild);
+            // Clear list if it has more tags than give (this can be optimized)
+            // We dont have to clear list if it has less tags because createListEntry prevents duplicates
+            if (tagListDIV.childElementCount > totalTags) {
+                while (!!tagListDIV.firstChild) {
+                    tagListDIV.removeChild(tagListDIV.firstChild);
+                }
             }
-        }
 
-        function deleteCallback(tag) {
-            tagListDIV.removeChild(document.getElementById("tags-" + tag));
-        }
+            function deleteCallback(tag) {
+                tagListDIV.removeChild(document.getElementById("tags-" + tag));
+            }
 
-        var tag;
-        for (tag in response) {
-            createListEntry('tags', tag, false, deleteCallback);
+            var tag;
+            for (tag in response) {
+                createListEntry('tags', tag, false, deleteCallback);
+            }
         }
     }
 

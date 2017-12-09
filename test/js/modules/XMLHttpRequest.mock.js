@@ -7,9 +7,16 @@ module.exports = {
         this.response = "ok";
 
         var apiMock = {};
-        this.response = apiMock[config.RREServerURL + '/api/tags/'] = function() {
+
+        apiMock[config.RREServerURL + '/api/tags/'] = function() {
             self.status = 200;
-            self.response = ['tag1', 'tag2', 'tag3'];
+            self.response = [{
+                name: 'tag1'
+            }, {
+                name: 'tag2'
+            }, {
+                name: 'tag3'
+            }];
         };
 
         apiMock[config.RREServerURL + '/api/subreddits/recommended'] = function() {
@@ -24,6 +31,15 @@ module.exports = {
                     self.status = 500;
                 }
             }
+        };
+
+        apiMock[config.RREServerURL + '/api/subreddits/getTagsForSubreddits'] = function() {
+            self.status = 200;
+            self.response = {
+                tag1: 0,
+                tag2: 1,
+                tag3: 2
+            };
         };
 
         this.setRequestHeader = function(header, value) {
@@ -46,7 +62,12 @@ module.exports = {
         this.send = function(body) {
             if (body) {
                 body = JSON.parse(body);
-                if (body.tags[0] === "loadRecommendations") {
+                // Mock from getTagsForSubscriptions
+                if (body.maxDistance) {
+
+                }
+                // Mock from loadRecommendations
+                else if (body.tags[0] === "loadRecommendations") {
                     self.response(body.tags[1] === "200");
                 }
             }
