@@ -24,6 +24,7 @@ describe('Utility Functions', () => {
                     // make sure the click event has time to execute
                     setTimeout(function() {
                         expect(deleteFunctionWorks).to.be.true;
+                        console.log('assertCreateListEntry complete');
                     }, 10);
                 }
             }
