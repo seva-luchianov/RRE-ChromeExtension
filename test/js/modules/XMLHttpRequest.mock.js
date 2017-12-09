@@ -44,8 +44,8 @@ module.exports = {
         };
 
         this.send = function(body) {
-            body = JSON.parse(body);
             if (body) {
+                body = JSON.parse(body);
                 if (body.tags[0] === "loadRecommendations") {
                     self.response(body.tags[1] === "200");
                 }

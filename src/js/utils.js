@@ -286,6 +286,7 @@ function loadTags() {
             }
 
             // Replace with tags from response
+            console.log(this.response);
             var response = JSON.parse(this.response);
             var i;
             for (i in response) {

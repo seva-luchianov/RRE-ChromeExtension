@@ -103,6 +103,7 @@ describe('Utility Functions', () => {
                 RRETags: ['loadRecommendations', '200'],
                 RREBlackList: []
             }, [], false, function(response) {
+                console.log("chrome storage callback works");
                 expect(response[0].subreddit).to.equal("/r/loadRecommendations/");
             });
         });
@@ -123,7 +124,7 @@ describe('Utility Functions', () => {
 
     describe('loadTags test', () => {
         it('creates the List Entry', () => {
-            //utils.xhr.loadTags();
+            utils.xhr.loadTags();
         });
     });
 
