@@ -96,4 +96,41 @@ describe('Utility Functions', () => {
             });
         });
     });
+
+    describe('loadRecommendations test', () => {
+        it('Works', () => {
+            utils.xhr.loadRecommendations({
+                RRETags: ['loadRecommendations', '200'],
+                RREBlackList: []
+            }, [], false, function(response) {
+                console.log('FINISHED');
+                expect(response.subreddit).to.be("loadRecommendations");
+            });
+        });
+
+        it('If Server Error, Display Alert', () => {
+            utils.xhr.loadRecommendations({
+                RRETags: ['loadRecommendations', '500'],
+                RREBlackList: []
+            }, [], false, function(response) {
+                expect(1).to.be(2);
+            });
+            setTimeout(function() {
+                console.log(alertTriggered);
+                alertTriggered = false;
+            }, 10);
+        });
+    });
+
+    describe('loadTags test', () => {
+        it('creates the List Entry', () => {
+
+        });
+    });
+
+    describe('getTagsForSubscriptions test', () => {
+        it('creates the List Entry', () => {
+
+        });
+    });
 });

@@ -33,13 +33,6 @@ if (sideBarDiv) {
     var loadingGifURL = chrome.runtime.getURL('./img/loading.gif');
     var optionshtml = chrome.runtime.getURL('./html/options.html');
 
-    if (!loadingGifURL) {
-        loadingGifURL = './img/loading.gif';
-    }
-    if (!optionshtml) {
-        optionshtml = './html/options.html';
-    }
-
     RREContainer.innerHTML =
         `<div>
             <div>
