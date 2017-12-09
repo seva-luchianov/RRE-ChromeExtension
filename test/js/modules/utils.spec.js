@@ -110,7 +110,6 @@ describe('Utility Functions', () => {
                     var tagsInput = document.getElementById('tagsInput');
                     expect(tagsInput.childElementCount).to.equal(3);
                     for (var i = 0; i < tagsInput.childElementCount; i++) {
-                        console.log(tagsInput.children[i].innerHTML);
                         expect(["tag1", "tag2", "tag3"]).to.include(tagsInput.children[i].innerHTML);
                     }
                     console.log('assertLoadTags Completed');
@@ -121,7 +120,6 @@ describe('Utility Functions', () => {
                     var tagListDIV = document.getElementById('tags');
                     expect(tagListDIV.childElementCount).to.equal(3);
                     for (var i = 0; i < tagListDIV.childElementCount; i++) {
-                        console.log(tagListDIV.children[i].firstElementChild.innerHTML);
                         expect(["tag1", "tag2", "tag3"]).to.include(tagListDIV.children[i].firstElementChild.innerHTML);
                     }
                     console.log('assertGetTagsForSubscriptions Completed');
